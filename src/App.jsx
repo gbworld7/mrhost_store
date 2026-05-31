@@ -51,6 +51,7 @@ export default function App() {
   const [editing, setEditing] = useState(null);
   const [cart, setCart] = useState([]);
   const [pay, setPay] = useState(false);
+  const [selectedCat, setSelectedCat] = useState("all");
 
   const reload = () => {
     Promise.allSettled([api.list(), api.categories()]).then(([l, c]) => {
@@ -85,9 +86,9 @@ export default function App() {
 
         <div style={{ marginTop: 16 }}>
           {!owner && (<>
-            {tab === "catalog" && !detail && <P.Catalog items={publicItems} cats={data.cats} onOpen={setDetail} onAdd={add} />}
+            {tab === "catalog" && !detail && <P.Catalog items={publicItems} cats={data.cats} selectedCat={selectedCat} onSelectCat={setSelectedCat} onOpen={setDetail} onAdd={add} />}
             {tab === "catalog" && detail && <P.Item item={detail} onBack={() => setDetail(null)} onAdd={add} />}
-            {tab === "categories" && <P.Categories cats={data.cats} counts={counts} onPick={(id) => { setTab("catalog"); }} />}
+            {tab === "categories" && <P.Categories cats={data.cats} counts={counts} onPick={(id) => { setSelectedCat(id); setTab("catalog"); }} />}
             {tab === "rating" && <P.Rating items={publicItems} />}
             {tab === "purchases" && <P.Purchases orders={data.orders} />}
             {tab === "partner" && <P.PartnerApply />}

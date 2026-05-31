@@ -43,8 +43,9 @@ function DescriptionModal({ item, onClose }) {
 const SLOTS = ["10:00", "12:30", "15:00", "17:30"];
 
 /* -------- Catalog -------- */
-export function Catalog({ items, cats, onOpen, onAdd }) {
-  const [cat, setCat] = useState("all");
+export function Catalog({ items, cats, selectedCat = "all", onSelectCat, onOpen, onAdd }) {
+  const [cat, setCat] = useState(selectedCat || "all");
+  useEffect(() => { setCat(selectedCat || "all"); }, [selectedCat]);
   const [descModal, setDescModal] = useState(null);
   const [q, setQ] = useState("");
   const baseCats = [{ id: "all", label: "All" }, ...cats.map((c) => ({ id: c.id, label: c.title }))];
@@ -58,7 +59,7 @@ export function Catalog({ items, cats, onOpen, onAdd }) {
         <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search products & services" style={{ border: "none", outline: "none", flex: 1, fontFamily: T.fontBody, fontSize: 14.5, background: "none" }} />
         {q && <button onClick={() => setQ("")} style={{ border: "none", background: "none", cursor: "pointer", color: T.gray2 }}><X size={16} /></button>}
       </div>
-      <div style={{ display: "flex", gap: 9, overflowX: "auto" }}>{baseCats.map((c) => <Chip key={c.id} on={c.id === cat} onClick={() => setCat(c.id)}>{c.label}</Chip>)}</div>
+      <div style={{ display: "flex", gap: 9, overflowX: "auto" }}>{baseCats.map((c) => <Chip key={c.id} on={c.id === cat} onClick={() => { setCat(c.id); onSelectCat?.(c.id); }}>{c.label}</Chip>)}</div>
       {!list.length ? <Empty text="Nothing here yet" sub="Try another search or category." /> : (
         <div style={{ ...grid, marginTop: 14 }}>
           {list.map((it) => (
@@ -224,7 +225,7 @@ export function Categories({ cats, counts, onPick }) {
     <div style={{ ...grid }}>
       {cats.map((c) => (
         <button key={c.id} onClick={() => onPick(c.id)} style={{ ...card, padding: 0, overflow: "hidden", textAlign: "left", cursor: "pointer" }}>
-          <div style={{ aspectRatio: "16/10", background: T.lineSoft, display: "grid", placeItems: "center" }}><Tag size={22} color="#C9C6BD" /></div>
+          <div style={{ aspectRatio: "16/10", background: T.lineSoft, display: "grid", placeItems: "center", overflow: "hidden" }}>{(c.cover_url || c.media || c.logo) ? <Pic tone={c.cover_url || c.media || c.logo} /> : <Tag size={22} color="#C9C6BD" />}</div>
           <div style={{ padding: "11px 13px", display: "flex", alignItems: "center", gap: 11 }}><Avatar name={c.title} src={c.logo || ""} size={38} /><div><div style={{ fontFamily: T.fontDisplay, fontWeight: 700, fontSize: 16 }}>{c.title}</div><div style={{ fontSize: 12.5, color: T.gray2 }}>{counts[c.id] || 0} items</div></div><Arrow size={18} color={T.gray2} style={{ marginLeft: "auto" }} /></div>
         </button>
       ))}
