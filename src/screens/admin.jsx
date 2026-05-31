@@ -13,11 +13,41 @@ const title = (it) => (it.description || "").split("—")[0].trim() || "Untitled
 const tileX = { position: "absolute", top: 5, right: 5, width: 22, height: 22, borderRadius: "50%", border: "none", background: "rgba(0,0,0,.6)", color: "#fff", cursor: "pointer", display: "grid", placeItems: "center" };
 const tile = { position: "relative", aspectRatio: "1/1", borderRadius: 12, overflow: "hidden", background: T.lineSoft, border: `1px solid ${T.line}` };
 const addTile = { display: "flex", flexDirection: "column", gap: 5, alignItems: "center", justifyContent: "center", aspectRatio: "1/1", borderRadius: 12, border: `1.5px dashed ${T.gold}`, background: T.goldSoft, color: "#8A6D2F", cursor: "pointer" };
+
+// DRONOVOD_ADMIN_DESCRIPTION_MODAL_V2
+const cardDescOnly = (it) => ((it.description || "").split("—").slice(1).join("—").trim()) || it.description || "";
+const cardDescPreview = {
+  color: T.gray,
+  fontSize: 14,
+  lineHeight: 1.35,
+  margin: "0 0 10px",
+  display: "-webkit-box",
+  WebkitLineClamp: 2,
+  WebkitBoxOrient: "vertical",
+  overflow: "hidden",
+};
+function CardDescriptionModal({ item, onClose }) {
+  if (!item) return null;
+  return (
+    <div onClick={onClose} style={{ position: "fixed", inset: 0, zIndex: 80, background: "rgba(0,0,0,.38)", display: "grid", placeItems: "end center", padding: 16 }}>
+      <div onClick={(e) => e.stopPropagation()} style={{ width: "min(520px,100%)", maxHeight: "72vh", overflow: "auto", borderRadius: 26, background: "#fff", border: `1px solid ${T.line}`, boxShadow: "0 24px 80px rgba(0,0,0,.22)", padding: 20 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
+          <div style={{ fontFamily: T.fontDisplay, fontSize: 24, fontWeight: 900, letterSpacing: "-.03em", flex: 1 }}>{title(item)}</div>
+          <button onClick={onClose} style={{ width: 38, height: 38, borderRadius: "50%", border: "none", background: T.lineSoft, color: T.ink, display: "grid", placeItems: "center", cursor: "pointer" }}><X size={20} /></button>
+        </div>
+        <p style={{ color: T.gray, fontSize: 16, lineHeight: 1.55, margin: 0 }}>{cardDescOnly(item)}</p>
+      </div>
+    </div>
+  );
+}
+
 function Pill({ s }) { const c = STATUS[s] || T.gray2; return <span style={{ fontWeight: 700, fontSize: 12, color: c, border: `1px solid ${c}44`, borderRadius: 8, padding: "3px 9px", fontFamily: T.fontBody }}>{s}</span>; }
 
 /* -------- Cards list -------- */
 export function AdminCards({ items, onEdit, onNew }) {
+  const [descOpen, setDescOpen] = useState(null);
   return (<div>
+    <CardDescriptionModal item={descOpen} onClose={() => setDescOpen(null)} />
     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", margin: "4px 0 14px" }}><h3 style={h3}>Cards</h3><button onClick={onNew} style={primaryBtn}><Plus size={16} /> New card</button></div>
     {!items.length ? <Empty text="No cards yet" sub="Create your first card." /> : (
       <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 18, maxWidth: 520, marginLeft: "auto", marginRight: "auto" }}>
@@ -29,6 +59,8 @@ export function AdminCards({ items, onEdit, onNew }) {
               <span style={{ ...badge, left: "auto", right: 8, background: it.visible ? "rgba(31,157,85,.9)" : "rgba(17,17,17,.7)" }}>{it.visible ? <Eye size={12} /> : <EyeOff size={12} />}</span>
             </div>
             <div style={{ fontFamily: T.fontDisplay, fontWeight: 800, margin: "16px 0 4px", fontSize: 23, letterSpacing: "-.01em" }}>{title(it)}</div>
+            <p style={cardDescPreview}>{cardDescOnly(it)}</p>
+            {cardDescOnly(it) && <button onClick={() => setDescOpen(it)} style={{ border: "none", background: "none", color: T.goldDeep || T.gold, padding: 0, margin: "0 0 10px", textAlign: "left", fontFamily: T.fontBody, fontWeight: 800, fontSize: 13, cursor: "pointer" }}>Details</button>}
             <div style={{ fontFamily: T.fontDisplay, fontWeight: 800, fontSize: 28, color: T.orange, marginBottom: 14 }}>${it.price}</div>
             <button onClick={() => onEdit(it)} style={{ width: "100%", padding: 15, borderRadius: 14, border: `1.5px solid ${T.ink}`, background: "#fff", color: T.ink, fontFamily: T.fontBody, fontWeight: 700, fontSize: 16, cursor: "pointer" }}>Edit</button>
           </div>

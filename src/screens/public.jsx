@@ -12,17 +12,47 @@ const tagBadge = { position: "absolute", top: 8, left: 8, display: "inline-flex"
 const grid = { display: "grid", gridTemplateColumns: "1fr", gap: 18, maxWidth: 520, marginLeft: "auto", marginRight: "auto" };
 const title = (it) => it.title || (it.description || "").split("—")[0].trim() || "Untitled";
 const DAYS = ["Mon 2", "Tue 3", "Wed 4", "Thu 5", "Fri 6"];
+
+// DRONOVOD_DESCRIPTION_MODAL_V2
+const descOnly = (it) => ((it.description || "").split("—").slice(1).join("—").trim()) || it.description || "";
+const twoLineDesc = {
+  fontSize: 15,
+  color: T.gray,
+  margin: "0 0 8px",
+  lineHeight: 1.4,
+  display: "-webkit-box",
+  WebkitLineClamp: 2,
+  WebkitBoxOrient: "vertical",
+  overflow: "hidden",
+};
+function DescriptionModal({ item, onClose }) {
+  if (!item) return null;
+  return (
+    <div onClick={onClose} style={{ position: "fixed", inset: 0, zIndex: 80, background: "rgba(0,0,0,.38)", display: "grid", placeItems: "end center", padding: 16 }}>
+      <div onClick={(e) => e.stopPropagation()} style={{ width: "min(520px,100%)", maxHeight: "72vh", overflow: "auto", borderRadius: 26, background: "#fff", border: `1px solid ${T.line}`, boxShadow: "0 24px 80px rgba(0,0,0,.22)", padding: 20 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
+          <div style={{ fontFamily: T.fontDisplay, fontSize: 24, fontWeight: 900, letterSpacing: "-.03em", flex: 1 }}>{title(item)}</div>
+          <button onClick={onClose} style={{ width: 38, height: 38, borderRadius: "50%", border: "none", background: T.lineSoft, color: T.ink, display: "grid", placeItems: "center", cursor: "pointer" }}><X size={20} /></button>
+        </div>
+        <p style={{ color: T.gray, fontSize: 16, lineHeight: 1.55, margin: 0 }}>{descOnly(item)}</p>
+      </div>
+    </div>
+  );
+}
+
 const SLOTS = ["10:00", "12:30", "15:00", "17:30"];
 
 /* -------- Catalog -------- */
 export function Catalog({ items, cats, onOpen, onAdd }) {
   const [cat, setCat] = useState("all");
+  const [descModal, setDescModal] = useState(null);
   const [q, setQ] = useState("");
   const baseCats = [{ id: "all", label: "All" }, ...cats.map((c) => ({ id: c.id, label: c.title }))];
   let list = items.filter((i) => cat === "all" ? true : i.category_id === cat);
   if (q.trim()) { const s = q.toLowerCase(); list = list.filter((i) => title(i).toLowerCase().includes(s) || (i.description || "").toLowerCase().includes(s)); }
   return (
     <>
+      <DescriptionModal item={descModal} onClose={() => setDescModal(null)} />
       <div style={{ display: "flex", alignItems: "center", gap: 8, ...card, padding: "10px 13px", margin: "16px 0 12px" }}>
         <Search size={18} color={T.gray2} />
         <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search products & services" style={{ border: "none", outline: "none", flex: 1, fontFamily: T.fontBody, fontSize: 14.5, background: "none" }} />
@@ -41,7 +71,8 @@ export function Catalog({ items, cats, onOpen, onAdd }) {
                 </div>
               </button>
               <h4 style={{ fontFamily: T.fontDisplay, fontWeight: 800, fontSize: 23, margin: "16px 0 6px", letterSpacing: "-.01em" }}>{title(it)}</h4>
-              <p style={{ fontSize: 15, color: T.gray, margin: "0 0 14px", lineHeight: 1.4 }}>{((it.description || "").split("—").slice(1).join("—").trim()) || it.description || ""}</p>
+              <p style={twoLineDesc}>{descOnly(it)}</p>
+              {descOnly(it) && <button onClick={() => setDescModal(it)} style={{ border: "none", background: "none", color: T.goldDeep || T.gold, padding: 0, margin: "0 0 12px", textAlign: "left", fontFamily: T.fontBody, fontWeight: 800, fontSize: 13, cursor: "pointer" }}>Details</button>}
               <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 16, marginTop: "auto" }}>
                 <span style={{ fontFamily: T.fontDisplay, fontWeight: 800, fontSize: 28, color: T.orange }}>${it.price}</span>
                 {it.vnd && <span style={{ fontSize: 13, color: T.gray2 }}>/ {it.vnd}</span>}

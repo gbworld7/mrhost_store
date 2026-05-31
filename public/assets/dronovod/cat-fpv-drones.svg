@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+<rect width="1024" height="1024" rx="96" fill="#fbf7ef"/>
+<rect x="44" y="44" width="936" height="936" rx="82" fill="#fff" stroke="#ead9b0" stroke-width="8"/>
+<circle cx="330" cy="330" r="68"/><circle cx="694" cy="330" r="68"/><circle cx="330" cy="694" r="68"/><circle cx="694" cy="694" r="68"/><path d="M390 390L512 512M634 390L512 512M390 634L512 512M634 634L512 512" stroke="#111" stroke-width="34" stroke-linecap="round"/><rect x="428" y="428" width="168" height="168" rx="46" fill="#111"/><circle cx="512" cy="512" r="34" fill="#c9952f"/>
+<text x="512" y="850" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="62" font-weight="900" fill="#111" letter-spacing="-2">FPV DRONES</text>
+<text x="512" y="905" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="24" font-weight="700" fill="#c9952f" letter-spacing="8">DRONOVOD</text>
+</svg>
