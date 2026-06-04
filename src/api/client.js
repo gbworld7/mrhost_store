@@ -58,7 +58,7 @@ export const api = {
   // admin: orders
   adminOrders: () => get("/admin/orders"),
   // admin: merchant (gpay)
-  merchant: (init_data) => post("/admin/merchant", { init_data, state: stateParam() }),
+  merchant: () => fetch(`https://api.mrhost.asia/api/v1/gpay/merchant/by-agent/${encodeURIComponent(agentId() || "dronovodbot")}`).then((r) => (r.ok ? r.json() : null)),
   composePackage: (order_id) => post("/admin/orders/compose-print-package", { order_id }),
   // admin: reviews moderation
   adminReviews: () => get("/admin/reviews"),
