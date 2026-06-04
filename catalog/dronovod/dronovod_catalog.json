@@ -1,49 +1,357 @@
 {
-  "agent_id": "dronovodbot",
-  "store": {"name": "DRONOVOD", "theme": "black-gold-field-tech"},
+  "store": {
+    "agent_id": "dronovodbot",
+    "title": "DRONOVOD",
+    "summary": "Drone gear, FPV kits, field tools and pilot merch.",
+    "hero": "hero-dronovod.svg"
+  },
   "categories": [
-    {"slug":"dronovod-fpv-drones","title":"FPV Drones","summary":"Ready-to-fly FPV rigs for field tests, training flights, creator shoots, and fast deployment.","cover":"cat-fpv-drones.svg","sort_order":1},
-    {"slug":"dronovod-cinewhoops","title":"Cinewhoops","summary":"Protected cinematic drones for indoor, city, travel, and low-risk content missions.","cover":"cat-cinewhoops.svg","sort_order":2},
-    {"slug":"dronovod-batteries-power","title":"Batteries & Power","summary":"LiPo packs, chargers, field power banks, and battery safety kits.","cover":"cat-batteries.svg","sort_order":3},
-    {"slug":"dronovod-controllers-radios","title":"Controllers & Radios","summary":"Transmitters, receivers, radio links, gimbals, and pilot control upgrades.","cover":"cat-controllers.svg","sort_order":4},
-    {"slug":"dronovod-antennas-signal","title":"Antennas & Signal","summary":"Antennas, video links, range kits, signal boosters, and field comms.","cover":"cat-antennas.svg","sort_order":5},
-    {"slug":"dronovod-field-tools","title":"Field Tools","summary":"Portable setup, repair, soldering, measurement, and launch-day tools.","cover":"cat-field-tools.svg","sort_order":6},
-    {"slug":"dronovod-repair-spares","title":"Repair & Spares","summary":"Frames, motors, props, ESCs, screws, tapes, mounts, and crash recovery kits.","cover":"cat-repair.svg","sort_order":7},
-    {"slug":"dronovod-pilot-merch","title":"Pilot Merch","summary":"DRONOVOD identity gear, patches, tags, stickers, and field-ready apparel.","cover":"cat-pilot-merch.svg","sort_order":8}
+    {
+      "slug": "dronovod-fpv-drones",
+      "title": "FPV Drones",
+      "summary": "Ready-to-fly FPV rigs for field tests, training flights, creator shoots, and fast deployment.",
+      "cover": "cat-fpv-drones.svg"
+    },
+    {
+      "slug": "dronovod-cinewhoops",
+      "title": "Cinewhoops",
+      "summary": "Protected cinematic drones for indoor, city, travel, and low-risk content missions.",
+      "cover": "cat-cinewhoops.svg"
+    },
+    {
+      "slug": "dronovod-batteries-power",
+      "title": "Batteries & Power",
+      "summary": "LiPo packs, chargers, field power banks, and battery safety kits.",
+      "cover": "cat-batteries.svg"
+    },
+    {
+      "slug": "dronovod-controllers-radios",
+      "title": "Controllers & Radios",
+      "summary": "Transmitters, receivers, radio links, gimbals, and pilot control upgrades.",
+      "cover": "cat-controllers.svg"
+    },
+    {
+      "slug": "dronovod-antennas-signal",
+      "title": "Antennas & Signal",
+      "summary": "Antennas, video links, range kits, signal boosters, and field comms.",
+      "cover": "cat-antennas.svg"
+    },
+    {
+      "slug": "dronovod-field-tools",
+      "title": "Field Tools",
+      "summary": "Portable setup, repair, soldering, measurement, and launch-day tools.",
+      "cover": "cat-field-tools.svg"
+    },
+    {
+      "slug": "dronovod-repair-spares",
+      "title": "Repair & Spares",
+      "summary": "Frames, motors, props, ESCs, screws, tapes, mounts, and crash recovery kits.",
+      "cover": "cat-repair.svg"
+    },
+    {
+      "slug": "dronovod-pilot-merch",
+      "title": "Pilot Merch",
+      "summary": "DRONOVOD identity gear, patches, tags, stickers, and field-ready apparel.",
+      "cover": "cat-pilot-merch.svg"
+    }
   ],
-  "cards": [
-    {"sku":"dronovod-fpv-drones-01","category":"dronovod-fpv-drones","title":"SkyForge 5-inch Freestyle Kit","description":"A balanced freestyle quad bundle for pilots who need power, control, and predictable field behavior.","price":"309","brand":"SkyForge","image":"brand-skyforge.svg"},
-    {"sku":"dronovod-fpv-drones-02","category":"dronovod-fpv-drones","title":"BlackWing Long Range Scout","description":"Long-range FPV setup for terrain checks, route scouting, and stable outdoor flights.","price":"349","brand":"BlackWing","image":"brand-blackwing.svg"},
-    {"sku":"dronovod-fpv-drones-03","category":"dronovod-fpv-drones","title":"RotorLab Trainer Quad","description":"Beginner-friendly FPV drone configured for training sessions and repair-friendly crashes.","price":"149","brand":"RotorLab","image":"brand-rotorlab.svg"},
-    {"sku":"dronovod-fpv-drones-04","category":"dronovod-fpv-drones","title":"DRONOVOD Field Starter Kit","description":"Drone, basic spares, tools, and pre-flight checklist packed as one starter kit.","price":"399","brand":"DRONOVOD","image":"hero-dronovod.svg"},
-    {"sku":"dronovod-fpv-drones-05","category":"dronovod-fpv-drones","title":"AeroPulse Night Practice Rig","description":"Compact FPV rig with visibility-focused setup for evening practice and low-light tests.","price":"289","brand":"AeroPulse","image":"brand-aeropulse.svg"},
-    {"sku":"dronovod-cinewhoops-01","category":"dronovod-cinewhoops","title":"SkyForge Cinewhoop 4K","description":"Protected prop cinematic drone for smooth indoor and travel shots.","price":"249","brand":"SkyForge","image":"brand-skyforge.svg"},
-    {"sku":"dronovod-cinewhoops-02","category":"dronovod-cinewhoops","title":"AeroPulse Tiny Whoop","description":"Tiny protected drone for training, tight rooms, and low-risk practice.","price":"89","brand":"AeroPulse","image":"brand-aeropulse.svg"},
-    {"sku":"dronovod-cinewhoops-03","category":"dronovod-cinewhoops","title":"BlackWing Ducted Frame Pro","description":"Durable cinewhoop-style frame with protected ducts and field-focused tuning.","price":"279","brand":"BlackWing","image":"brand-blackwing.svg"},
-    {"sku":"dronovod-cinewhoops-04","category":"dronovod-cinewhoops","title":"RotorLab Quiet Duct Kit","description":"Quiet cinewhoop setup for safer filming near people and objects.","price":"199","brand":"RotorLab","image":"brand-rotorlab.svg"},
-    {"sku":"dronovod-batteries-power-01","category":"dronovod-batteries-power","title":"AeroPulse 6S Power Pack x4","description":"Set of four high-discharge battery packs for serious FPV sessions.","price":"119","brand":"AeroPulse","image":"brand-aeropulse.svg"},
-    {"sku":"dronovod-batteries-power-02","category":"dronovod-batteries-power","title":"FieldKit Multi Charger","description":"Portable multi-channel charger for charging packs on location.","price":"159","brand":"FieldKit","image":"brand-fieldkit.svg"},
-    {"sku":"dronovod-batteries-power-03","category":"dronovod-batteries-power","title":"FieldKit LiPo Safety Bag Set","description":"Fire-resistant charging bags, labels, voltage checker, and storage guide.","price":"39","brand":"FieldKit","image":"brand-fieldkit.svg"},
-    {"sku":"dronovod-batteries-power-04","category":"dronovod-batteries-power","title":"DRONOVOD Field Power Adapter","description":"Adapter kit for charging FPV packs from a field power station.","price":"69","brand":"DRONOVOD","image":"hero-dronovod.svg"},
-    {"sku":"dronovod-controllers-radios-01","category":"dronovod-controllers-radios","title":"AeroPulse Radio Controller","description":"Modern radio controller with comfortable grip, clean gimbals, and field-ready battery life.","price":"219","brand":"AeroPulse","image":"brand-aeropulse.svg"},
-    {"sku":"dronovod-controllers-radios-02","category":"dronovod-controllers-radios","title":"RotorLab Receiver Pair","description":"Receiver set for reliable control links and fast builds.","price":"59","brand":"RotorLab","image":"brand-rotorlab.svg"},
-    {"sku":"dronovod-controllers-radios-03","category":"dronovod-controllers-radios","title":"BlackWing Range Module","description":"Radio module for extended range tests and stronger field connection.","price":"129","brand":"BlackWing","image":"brand-blackwing.svg"},
-    {"sku":"dronovod-controllers-radios-04","category":"dronovod-controllers-radios","title":"DRONOVOD Simulator Cable Kit","description":"Plug-in adapter for simulator training before real flights.","price":"29","brand":"DRONOVOD","image":"hero-dronovod.svg"},
-    {"sku":"dronovod-antennas-signal-01","category":"dronovod-antennas-signal","title":"AeroPulse Patch Antenna Pair","description":"Directional antenna pair for cleaner video feed and longer FPV sessions.","price":"79","brand":"AeroPulse","image":"brand-aeropulse.svg"},
-    {"sku":"dronovod-antennas-signal-02","category":"dronovod-antennas-signal","title":"RotorLab Omni Antenna Set","description":"Everyday antenna set for casual flights and training days.","price":"35","brand":"RotorLab","image":"brand-rotorlab.svg"},
-    {"sku":"dronovod-antennas-signal-03","category":"dronovod-antennas-signal","title":"BlackWing Field Video Link Kit","description":"Field video kit for range testing and stable image transmission.","price":"199","brand":"BlackWing","image":"brand-blackwing.svg"},
-    {"sku":"dronovod-antennas-signal-04","category":"dronovod-antennas-signal","title":"FieldKit Signal Check Card","description":"Pocket tester and checklist card for quick antenna and link inspection.","price":"25","brand":"FieldKit","image":"brand-fieldkit.svg"},
-    {"sku":"dronovod-field-tools-01","category":"dronovod-field-tools","title":"FieldKit Compact Tool Roll","description":"Compact tool roll with hex drivers, pliers, solder aid, straps, and repair essentials.","price":"79","brand":"FieldKit","image":"brand-fieldkit.svg"},
-    {"sku":"dronovod-field-tools-02","category":"dronovod-field-tools","title":"FieldKit Portable Solder Station","description":"Small field soldering station for urgent repairs and connector swaps.","price":"99","brand":"FieldKit","image":"brand-fieldkit.svg"},
-    {"sku":"dronovod-field-tools-03","category":"dronovod-field-tools","title":"DRONOVOD Pre-flight Tags","description":"Weatherproof checklist tags for battery, props, screws, firmware, and takeoff zone.","price":"19","brand":"DRONOVOD","image":"hero-dronovod.svg"},
-    {"sku":"dronovod-field-tools-04","category":"dronovod-field-tools","title":"SkyForge Launch Pad","description":"Foldable launch pad for dusty, wet, or uneven terrain.","price":"39","brand":"SkyForge","image":"brand-skyforge.svg"},
-    {"sku":"dronovod-repair-spares-01","category":"dronovod-repair-spares","title":"RotorLab Crash Recovery Box","description":"Props, screws, straps, arms, tape, pads, and emergency field repair parts.","price":"89","brand":"RotorLab","image":"brand-rotorlab.svg"},
-    {"sku":"dronovod-repair-spares-02","category":"dronovod-repair-spares","title":"SkyForge Prop Pack","description":"Durable propeller pack for daily FPV sessions.","price":"24","brand":"SkyForge","image":"brand-skyforge.svg"},
-    {"sku":"dronovod-repair-spares-03","category":"dronovod-repair-spares","title":"BlackWing Motor Set","description":"Matched motors for 5-inch freestyle and training builds.","price":"119","brand":"BlackWing","image":"brand-blackwing.svg"},
-    {"sku":"dronovod-repair-spares-04","category":"dronovod-repair-spares","title":"RotorLab Carbon Arm Kit","description":"Replacement carbon arms and hardware for quick rebuilds.","price":"49","brand":"RotorLab","image":"brand-rotorlab.svg"},
-    {"sku":"dronovod-pilot-merch-01","category":"dronovod-pilot-merch","title":"DRONOVOD Field Patch Set","description":"Velcro patches for field bags, jackets, drone cases, and pilot identity.","price":"19","brand":"DRONOVOD","image":"hero-dronovod.svg"},
-    {"sku":"dronovod-pilot-merch-02","category":"dronovod-pilot-merch","title":"DRONOVOD Pilot Hoodie","description":"Black-and-gold hoodie for drone pilots, creators, and field teams.","price":"69","brand":"DRONOVOD","image":"hero-dronovod.svg"},
-    {"sku":"dronovod-pilot-merch-03","category":"dronovod-pilot-merch","title":"DRONOVOD Sticker Pack","description":"Premium sticker pack for cases, laptops, toolboxes, and chargers.","price":"12","brand":"DRONOVOD","image":"hero-dronovod.svg"},
-    {"sku":"dronovod-pilot-merch-04","category":"dronovod-pilot-merch","title":"FieldKit QR Card Holder","description":"Minimal card holder for pilot notes, QR identity, and field access cards.","price":"25","brand":"FieldKit","image":"brand-fieldkit.svg"}
+  "items": [
+    {
+      "id": "dronovod-fpv-drones-01",
+      "title": "SkyForge 5-inch Freestyle Kit",
+      "description": "A balanced freestyle quad bundle for pilots who need power, control, and predictable field behavior.",
+      "price": 309,
+      "category_slug": "dronovod-fpv-drones",
+      "image": "brand-skyforge.svg",
+      "brand": "Skyforge"
+    },
+    {
+      "id": "dronovod-fpv-drones-02",
+      "title": "BlackWing Long Range Scout",
+      "description": "Long-range FPV setup for terrain checks, route scouting, and stable outdoor flights.",
+      "price": 349,
+      "category_slug": "dronovod-fpv-drones",
+      "image": "brand-blackwing.svg",
+      "brand": "Blackwing"
+    },
+    {
+      "id": "dronovod-fpv-drones-03",
+      "title": "RotorLab Trainer Quad",
+      "description": "Beginner-friendly FPV drone configured for training sessions and repair-friendly crashes.",
+      "price": 149,
+      "category_slug": "dronovod-fpv-drones",
+      "image": "brand-rotorlab.svg",
+      "brand": "Rotorlab"
+    },
+    {
+      "id": "dronovod-fpv-drones-04",
+      "title": "DRONOVOD Field Starter Kit",
+      "description": "Drone, basic spares, tools, and pre-flight checklist packed as one starter kit.",
+      "price": 399,
+      "category_slug": "dronovod-fpv-drones",
+      "image": "hero-dronovod.svg",
+      "brand": "DRONOVOD"
+    },
+    {
+      "id": "dronovod-fpv-drones-05",
+      "title": "AeroPulse Night Practice Rig",
+      "description": "Compact FPV rig with visibility-focused setup for evening practice and low-light tests.",
+      "price": 289,
+      "category_slug": "dronovod-fpv-drones",
+      "image": "brand-aeropulse.svg",
+      "brand": "Aeropulse"
+    },
+    {
+      "id": "dronovod-cinewhoops-01",
+      "title": "SkyForge Cinewhoop 4K",
+      "description": "Protected prop cinematic drone for smooth indoor and travel shots.",
+      "price": 249,
+      "category_slug": "dronovod-cinewhoops",
+      "image": "brand-skyforge.svg",
+      "brand": "Skyforge"
+    },
+    {
+      "id": "dronovod-cinewhoops-02",
+      "title": "AeroPulse Tiny Whoop",
+      "description": "Tiny protected drone for training, tight rooms, and low-risk practice.",
+      "price": 89,
+      "category_slug": "dronovod-cinewhoops",
+      "image": "brand-aeropulse.svg",
+      "brand": "Aeropulse"
+    },
+    {
+      "id": "dronovod-cinewhoops-03",
+      "title": "BlackWing Ducted Frame Pro",
+      "description": "Durable cinewhoop-style frame with protected ducts and field-focused tuning.",
+      "price": 279,
+      "category_slug": "dronovod-cinewhoops",
+      "image": "brand-blackwing.svg",
+      "brand": "Blackwing"
+    },
+    {
+      "id": "dronovod-cinewhoops-04",
+      "title": "RotorLab Quiet Duct Kit",
+      "description": "Quiet cinewhoop setup for safer filming near people and objects.",
+      "price": 199,
+      "category_slug": "dronovod-cinewhoops",
+      "image": "brand-rotorlab.svg",
+      "brand": "Rotorlab"
+    },
+    {
+      "id": "dronovod-batteries-power-01",
+      "title": "AeroPulse 6S Power Pack x4",
+      "description": "Set of four high-discharge battery packs for serious FPV sessions.",
+      "price": 119,
+      "category_slug": "dronovod-batteries-power",
+      "image": "brand-aeropulse.svg",
+      "brand": "Aeropulse"
+    },
+    {
+      "id": "dronovod-batteries-power-02",
+      "title": "FieldKit Multi Charger",
+      "description": "Portable multi-channel charger for charging packs on location.",
+      "price": 159,
+      "category_slug": "dronovod-batteries-power",
+      "image": "brand-fieldkit.svg",
+      "brand": "Fieldkit"
+    },
+    {
+      "id": "dronovod-batteries-power-03",
+      "title": "FieldKit LiPo Safety Bag Set",
+      "description": "Fire-resistant charging bags, labels, voltage checker, and storage guide.",
+      "price": 39,
+      "category_slug": "dronovod-batteries-power",
+      "image": "brand-fieldkit.svg",
+      "brand": "Fieldkit"
+    },
+    {
+      "id": "dronovod-batteries-power-04",
+      "title": "DRONOVOD Field Power Adapter",
+      "description": "Adapter kit for charging FPV packs from a field power station.",
+      "price": 69,
+      "category_slug": "dronovod-batteries-power",
+      "image": "hero-dronovod.svg",
+      "brand": "DRONOVOD"
+    },
+    {
+      "id": "dronovod-controllers-radios-01",
+      "title": "AeroPulse Radio Controller",
+      "description": "Modern radio controller with comfortable grip, clean gimbals, and field-ready battery life.",
+      "price": 219,
+      "category_slug": "dronovod-controllers-radios",
+      "image": "brand-aeropulse.svg",
+      "brand": "Aeropulse"
+    },
+    {
+      "id": "dronovod-controllers-radios-02",
+      "title": "RotorLab Receiver Pair",
+      "description": "Receiver set for reliable control links and fast builds.",
+      "price": 59,
+      "category_slug": "dronovod-controllers-radios",
+      "image": "brand-rotorlab.svg",
+      "brand": "Rotorlab"
+    },
+    {
+      "id": "dronovod-controllers-radios-03",
+      "title": "BlackWing Range Module",
+      "description": "Radio module for extended range tests and stronger field connection.",
+      "price": 129,
+      "category_slug": "dronovod-controllers-radios",
+      "image": "brand-blackwing.svg",
+      "brand": "Blackwing"
+    },
+    {
+      "id": "dronovod-controllers-radios-04",
+      "title": "DRONOVOD Simulator Cable Kit",
+      "description": "Plug-in adapter for simulator training before real flights.",
+      "price": 29,
+      "category_slug": "dronovod-controllers-radios",
+      "image": "hero-dronovod.svg",
+      "brand": "DRONOVOD"
+    },
+    {
+      "id": "dronovod-antennas-signal-01",
+      "title": "AeroPulse Patch Antenna Pair",
+      "description": "Directional antenna pair for cleaner video feed and longer FPV sessions.",
+      "price": 79,
+      "category_slug": "dronovod-antennas-signal",
+      "image": "brand-aeropulse.svg",
+      "brand": "Aeropulse"
+    },
+    {
+      "id": "dronovod-antennas-signal-02",
+      "title": "RotorLab Omni Antenna Set",
+      "description": "Everyday antenna set for casual flights and training days.",
+      "price": 35,
+      "category_slug": "dronovod-antennas-signal",
+      "image": "brand-rotorlab.svg",
+      "brand": "Rotorlab"
+    },
+    {
+      "id": "dronovod-antennas-signal-03",
+      "title": "BlackWing Field Video Link Kit",
+      "description": "Field video kit for range testing and stable image transmission.",
+      "price": 199,
+      "category_slug": "dronovod-antennas-signal",
+      "image": "brand-blackwing.svg",
+      "brand": "Blackwing"
+    },
+    {
+      "id": "dronovod-antennas-signal-04",
+      "title": "FieldKit Signal Check Card",
+      "description": "Pocket tester and checklist card for quick antenna and link inspection.",
+      "price": 25,
+      "category_slug": "dronovod-antennas-signal",
+      "image": "brand-fieldkit.svg",
+      "brand": "Fieldkit"
+    },
+    {
+      "id": "dronovod-field-tools-01",
+      "title": "FieldKit Compact Tool Roll",
+      "description": "Compact tool roll with hex drivers, pliers, solder aid, straps, and repair essentials.",
+      "price": 79,
+      "category_slug": "dronovod-field-tools",
+      "image": "brand-fieldkit.svg",
+      "brand": "Fieldkit"
+    },
+    {
+      "id": "dronovod-field-tools-02",
+      "title": "FieldKit Portable Solder Station",
+      "description": "Small field soldering station for urgent repairs and connector swaps.",
+      "price": 99,
+      "category_slug": "dronovod-field-tools",
+      "image": "brand-fieldkit.svg",
+      "brand": "Fieldkit"
+    },
+    {
+      "id": "dronovod-field-tools-03",
+      "title": "DRONOVOD Pre-flight Tags",
+      "description": "Weatherproof checklist tags for battery, props, screws, firmware, and takeoff zone.",
+      "price": 19,
+      "category_slug": "dronovod-field-tools",
+      "image": "hero-dronovod.svg",
+      "brand": "DRONOVOD"
+    },
+    {
+      "id": "dronovod-field-tools-04",
+      "title": "SkyForge Launch Pad",
+      "description": "Foldable launch pad for dusty, wet, or uneven terrain.",
+      "price": 39,
+      "category_slug": "dronovod-field-tools",
+      "image": "brand-skyforge.svg",
+      "brand": "Skyforge"
+    },
+    {
+      "id": "dronovod-repair-spares-01",
+      "title": "RotorLab Crash Recovery Box",
+      "description": "Props, screws, straps, arms, tape, pads, and emergency field repair parts.",
+      "price": 89,
+      "category_slug": "dronovod-repair-spares",
+      "image": "brand-rotorlab.svg",
+      "brand": "Rotorlab"
+    },
+    {
+      "id": "dronovod-repair-spares-02",
+      "title": "SkyForge Prop Pack",
+      "description": "Durable propeller pack for daily FPV sessions.",
+      "price": 24,
+      "category_slug": "dronovod-repair-spares",
+      "image": "brand-skyforge.svg",
+      "brand": "Skyforge"
+    },
+    {
+      "id": "dronovod-repair-spares-03",
+      "title": "BlackWing Motor Set",
+      "description": "Matched motors for 5-inch freestyle and training builds.",
+      "price": 119,
+      "category_slug": "dronovod-repair-spares",
+      "image": "brand-blackwing.svg",
+      "brand": "Blackwing"
+    },
+    {
+      "id": "dronovod-repair-spares-04",
+      "title": "RotorLab Carbon Arm Kit",
+      "description": "Replacement carbon arms and hardware for quick rebuilds.",
+      "price": 49,
+      "category_slug": "dronovod-repair-spares",
+      "image": "brand-rotorlab.svg",
+      "brand": "Rotorlab"
+    },
+    {
+      "id": "dronovod-pilot-merch-01",
+      "title": "DRONOVOD Field Patch Set",
+      "description": "Velcro patches for field bags, jackets, drone cases, and pilot identity.",
+      "price": 19,
+      "category_slug": "dronovod-pilot-merch",
+      "image": "hero-dronovod.svg",
+      "brand": "DRONOVOD"
+    },
+    {
+      "id": "dronovod-pilot-merch-02",
+      "title": "DRONOVOD Pilot Hoodie",
+      "description": "Black-and-gold hoodie for drone pilots, creators, and field teams.",
+      "price": 69,
+      "category_slug": "dronovod-pilot-merch",
+      "image": "hero-dronovod.svg",
+      "brand": "DRONOVOD"
+    },
+    {
+      "id": "dronovod-pilot-merch-03",
+      "title": "DRONOVOD Sticker Pack",
+      "description": "Premium sticker pack for cases, laptops, toolboxes, and chargers.",
+      "price": 12,
+      "category_slug": "dronovod-pilot-merch",
+      "image": "hero-dronovod.svg",
+      "brand": "DRONOVOD"
+    },
+    {
+      "id": "dronovod-pilot-merch-04",
+      "title": "FieldKit QR Card Holder",
+      "description": "Minimal card holder for pilot notes, QR identity, and field access cards.",
+      "price": 25,
+      "category_slug": "dronovod-pilot-merch",
+      "image": "brand-fieldkit.svg",
+      "brand": "Fieldkit"
+    }
   ]
 }

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import {
   ShoppingCart, Trash2, ChevronLeft, ChevronRight, X, Star, Calendar, Clock, Search, Download,
   Play, Plus, Video, FileText, Package, Tag, Award, ChevronRight as Arrow, Copy, Check, MessageCircle,
-  CreditCard, Building2, Wallet, Clock as ClockI,
+  CreditCard, Building2, Wallet, Clock as ClockI, Heart,
 } from "lucide-react";
 import { T } from "../theme/tokens.js";
 import { api } from "../api/client.js";
@@ -43,7 +43,7 @@ function DescriptionModal({ item, onClose }) {
 const SLOTS = ["10:00", "12:30", "15:00", "17:30"];
 
 /* -------- Catalog -------- */
-export function Catalog({ items, cats, selectedCat = "all", onSelectCat, onOpen, onAdd }) {
+export function Catalog({ items, cats, selectedCat = "all", onSelectCat, onOpen, onAdd, favs = {}, onToggleFav }) {
   const [cat, setCat] = useState(selectedCat || "all");
   useEffect(() => { setCat(selectedCat || "all"); }, [selectedCat]);
   const [descModal, setDescModal] = useState(null);
@@ -53,6 +53,7 @@ export function Catalog({ items, cats, selectedCat = "all", onSelectCat, onOpen,
   if (q.trim()) { const s = q.toLowerCase(); list = list.filter((i) => title(i).toLowerCase().includes(s) || (i.description || "").toLowerCase().includes(s)); }
   return (
     <>
+      <DescriptionModal item={descModal} onClose={() => setDescModal(null)} />
       <DescriptionModal item={descModal} onClose={() => setDescModal(null)} />
       <div style={{ display: "flex", alignItems: "center", gap: 8, ...card, padding: "10px 13px", margin: "16px 0 12px" }}>
         <Search size={18} color={T.gray2} />
@@ -64,13 +65,18 @@ export function Catalog({ items, cats, selectedCat = "all", onSelectCat, onOpen,
         <div style={{ ...grid, marginTop: 14 }}>
           {list.map((it) => (
             <div key={it.id} style={{ background: "linear-gradient(180deg,#F9F3E5,#FFFFFF)", border: `1px solid ${T.gold}`, borderRadius: 22, padding: 16, boxShadow: "0 10px 30px rgba(0,0,0,.06)", display: "flex", flexDirection: "column" }}>
-              <button onClick={() => onOpen(it)} style={{ border: "none", padding: 0, background: "none", cursor: "pointer" }}>
-                <div style={{ width: "100%", aspectRatio: "1/1", borderRadius: 18, overflow: "hidden", background: "#fff", position: "relative", border: `1px solid ${T.lineSoft}` }}>
-                  <Pic tone={(it.images || [])[0]} />
-                  {it.booking?.enabled && <span style={tagBadge}><Calendar size={12} /> Booking</span>}
-                  {it.video && <span style={{ ...tagBadge, left: "auto", right: 8 }}><Video size={12} /></span>}
-                </div>
-              </button>
+              <div style={{ position: "relative" }}>
+                <button onClick={() => onOpen(it)} style={{ border: "none", padding: 0, background: "none", cursor: "pointer", display: "block", width: "100%" }}>
+                  <div style={{ width: "100%", aspectRatio: "1/1", borderRadius: 18, overflow: "hidden", background: "#fff", position: "relative", border: `1px solid ${T.lineSoft}` }}>
+                    <Pic tone={(it.images || [])[0]} />
+                    {it.booking?.enabled && <span style={tagBadge}><Calendar size={12} /> Booking</span>}
+                    {it.video && <span style={{ ...tagBadge, left: "auto", right: 8 }}><Video size={12} /></span>}
+                  </div>
+                </button>
+                <button onClick={(e) => { e.stopPropagation(); onToggleFav && onToggleFav(it.id); }} aria-label="Favorite" style={{ position: "absolute", top: 12, right: 12, width: 38, height: 38, borderRadius: "50%", border: "none", background: "rgba(255,255,255,.92)", boxShadow: "0 4px 14px rgba(0,0,0,.14)", cursor: "pointer", display: "grid", placeItems: "center" }}>
+                  <Heart size={20} color={favs[it.id] ? T.orange : "#111"} fill={favs[it.id] ? T.orange : "none"} />
+                </button>
+              </div>
               <h4 style={{ fontFamily: T.fontDisplay, fontWeight: 800, fontSize: 23, margin: "16px 0 6px", letterSpacing: "-.01em" }}>{title(it)}</h4>
               <p style={twoLineDesc}>{descOnly(it)}</p>
               {descOnly(it) && <button onClick={() => setDescModal(it)} style={{ border: "none", background: "none", color: T.goldDeep || T.gold, padding: 0, margin: "0 0 12px", textAlign: "left", fontFamily: T.fontBody, fontWeight: 800, fontSize: 13, cursor: "pointer" }}>Details</button>}
@@ -267,22 +273,95 @@ export function PartnerApply() {
     <button style={cta}>Send application</button>
   </div>);
 }
-export function Cabinet({ user, balance, ledger, onTab }) {
+export function MyOrders({ data }) {
+  const loading = data === null || data === undefined;
+  const authed = !!(data && data.authed);
+  const orders = (data && Array.isArray(data.orders)) ? data.orders : [];
+  const profileUrl = (data && data.profile_url) || "https://mrhost.asia/profile/pay";
+  return (<div>
+    {loading && <div style={{ ...card, color: T.gray2, fontSize: 14 }}>Loading your orders…</div>}
+
+    {!loading && !authed && (
+      <div style={{ ...card }}>
+        <div style={{ fontSize: 14, color: T.gray2, lineHeight: 1.5, marginBottom: 12 }}>Open this store inside Telegram to see your orders — or open your full profile on the web.</div>
+        <a href={profileUrl} target="_blank" rel="noreferrer" style={{ display: "block", textAlign: "center", background: T.ink, color: "#fff", borderRadius: 13, padding: "12px 0", fontFamily: T.fontDisplay, fontWeight: 700, fontSize: 14, textDecoration: "none" }}>Open profile</a>
+      </div>
+    )}
+
+    {!loading && authed && orders.length === 0 && (
+      <div style={{ ...card, color: T.gray2, fontSize: 14 }}>No orders yet.</div>
+    )}
+
+    {!loading && authed && orders.map((o, i) => (
+      <div key={o.public_id || i} style={{ ...card, marginBottom: 12 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 6 }}>
+          <span style={{ fontSize: 11, fontWeight: 700, color: T.gray2, textTransform: "uppercase", letterSpacing: ".04em" }}>Order</span>
+          <span style={{ fontSize: 12, color: T.gray2 }}>{o.public_id}</span>
+        </div>
+        <div style={{ fontFamily: T.fontDisplay, fontWeight: 800, fontSize: 16, marginBottom: 10 }}>{o.title}</div>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
+          <div>
+            <div style={{ fontSize: 13, color: T.gray2, marginBottom: 2 }}>{o.status}</div>
+            {o.price != null && <div style={{ fontFamily: T.fontDisplay, fontWeight: 800, fontSize: 22 }}>${o.price}</div>}
+          </div>
+          {o.track_url && <a href={o.track_url} target="_blank" rel="noreferrer" style={{ background: T.ink, color: "#fff", borderRadius: 12, padding: "9px 16px", fontFamily: T.fontDisplay, fontWeight: 700, fontSize: 13.5, textDecoration: "none", whiteSpace: "nowrap" }}>Track →</a>}
+        </div>
+      </div>
+    ))}
+  </div>);
+}
+
+export function Cabinet({ user, cabinet, fallbackLedger, onTab }) {
+  const loading = cabinet === null || cabinet === undefined;
+  const authed = !!(cabinet && cabinet.authed);
+  const balance = (cabinet && cabinet.balance != null) ? cabinet.balance : "0.00";
+  const address = cabinet && cabinet.address;
+  const ledger = (cabinet && Array.isArray(cabinet.ledger)) ? cabinet.ledger : (fallbackLedger || []);
+  const profileUrl = (cabinet && cabinet.profile_url) || "https://mrhost.asia/profile/pay";
+  const short = (a) => (a && a.length > 14 ? `${a.slice(0, 8)}…${a.slice(-6)}` : a);
+  const copy = (a) => { try { navigator.clipboard.writeText(a); } catch (e) {} };
+
   return (<div>
     <div style={{ ...card, display: "flex", alignItems: "center", gap: 13, marginBottom: 14 }}>
-      <div style={{ width: 54, height: 54, borderRadius: "50%", background: T.goldSoft, color: T.goldDeep, display: "grid", placeItems: "center", fontFamily: T.fontDisplay, fontWeight: 800, fontSize: 22 }}>{(user.name || "U")[0]}</div>
-      <div><div style={{ fontFamily: T.fontDisplay, fontWeight: 800, fontSize: 18 }}>{user.name}</div><div style={{ fontSize: 13, color: T.gray2 }}>@{user.username} · {user.lang}</div></div>
+      <div style={{ width: 54, height: 54, borderRadius: "50%", background: T.goldSoft, color: T.goldDeep, display: "grid", placeItems: "center", fontFamily: T.fontDisplay, fontWeight: 800, fontSize: 22 }}>{(((user && user.name) || "U")[0])}</div>
+      <div><div style={{ fontFamily: T.fontDisplay, fontWeight: 800, fontSize: 18 }}>{(user && user.name) || "Guest"}</div><div style={{ fontSize: 13, color: T.gray2 }}>{user && user.username ? `@${user.username}` : ""}{user && user.lang ? ` · ${user.lang}` : ""}</div></div>
     </div>
-    <div style={{ ...card, marginBottom: 14, background: T.ink, color: "#fff", border: "none" }}><div style={{ fontSize: 12.5, color: "#bdbdbd", marginBottom: 4 }}>Store balance</div><div style={{ fontFamily: T.fontDisplay, fontWeight: 800, fontSize: 30 }}>${balance}</div></div>
-    <div style={{ ...card }}>
-      <div style={secLbl}>History</div>
-      {ledger.map((l, i) => (
-        <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "9px 0", borderBottom: i < ledger.length - 1 ? `1px solid ${T.lineSoft}` : "none" }}>
-          <div style={{ flex: 1 }}><div style={{ fontSize: 14 }}>{l.t}</div><div style={{ fontSize: 12, color: T.gray2 }}>{l.date}</div></div>
-          <span style={{ fontFamily: T.fontDisplay, fontWeight: 700, color: l.d.startsWith("+") ? T.green : T.ink }}>{l.d}</span>
-        </div>
-      ))}
-    </div>
+
+    {loading && <div style={{ ...card, color: T.gray2, fontSize: 14 }}>Loading your GPay cabinet…</div>}
+
+    {!loading && !authed && (
+      <div style={{ ...card }}>
+        <div style={{ fontSize: 14, color: T.gray2, lineHeight: 1.5, marginBottom: 12 }}>Open this store inside Telegram to see your GPay wallet and history — or open your full profile on the web.</div>
+        <a href={profileUrl} target="_blank" rel="noreferrer" style={{ display: "block", textAlign: "center", background: T.ink, color: "#fff", borderRadius: 13, padding: "12px 0", fontFamily: T.fontDisplay, fontWeight: 700, fontSize: 14, textDecoration: "none" }}>Open profile</a>
+      </div>
+    )}
+
+    {!loading && authed && (<>
+      <div style={{ ...card, marginBottom: 14, background: T.ink, color: "#fff", border: "none" }}>
+        <div style={{ fontSize: 12.5, color: "#bdbdbd", marginBottom: 4 }}>GPay balance · USDT</div>
+        <div style={{ fontFamily: T.fontDisplay, fontWeight: 800, fontSize: 30 }}>${balance}</div>
+        {address ? (
+          <div onClick={() => copy(address)} title="Copy address" style={{ marginTop: 10, fontSize: 12.5, color: "#cfcfcf", cursor: "pointer", wordBreak: "break-all" }}>
+            <span style={{ color: "#9a9a9a" }}>Polygon · </span>{short(address)} <span style={{ color: T.gold }}>⧉</span>
+          </div>
+        ) : (
+          <div style={{ marginTop: 10, fontSize: 12.5, color: "#cfcfcf" }}>Verify your account on the web to activate your wallet address.</div>
+        )}
+      </div>
+
+      <div style={{ ...card, marginBottom: 14 }}>
+        <div style={secLbl}>History</div>
+        {ledger.length === 0 && <div style={{ fontSize: 13.5, color: T.gray2, padding: "8px 0" }}>No transactions yet.</div>}
+        {ledger.map((l, i) => (
+          <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "9px 0", borderBottom: i < ledger.length - 1 ? `1px solid ${T.lineSoft}` : "none" }}>
+            <div style={{ flex: 1 }}><div style={{ fontSize: 14 }}>{l.t}</div><div style={{ fontSize: 12, color: T.gray2 }}>{l.date}</div></div>
+            <span style={{ fontFamily: T.fontDisplay, fontWeight: 700, color: String(l.d).startsWith("+") ? T.green : T.ink }}>{l.d}</span>
+          </div>
+        ))}
+      </div>
+
+      <a href={profileUrl} target="_blank" rel="noreferrer" style={{ display: "block", textAlign: "center", background: "#fff", color: T.ink, border: `1px solid ${T.line}`, borderRadius: 13, padding: "12px 0", fontFamily: T.fontDisplay, fontWeight: 700, fontSize: 14, textDecoration: "none" }}>Open full profile</a>
+    </>)}
   </div>);
 }
 
@@ -398,7 +477,8 @@ export function PaySheet({ cart, onClose, agentId = "", storeName = "" }) {
       payment: { method: "USDT", network: "POLYGON" },
     };
     try {
-      const res = await fetch(`${MRHOST_API}/api/v1/gpay/order-payment-requests`, { method: "POST", headers: { "Content-Type": "application/json", Accept: "application/json" }, body: JSON.stringify(body) });
+      const _st = (typeof window !== "undefined" && new URLSearchParams(window.location.search).get("state")) || "";
+      const res = await fetch(`/miniapi/store/order/invoice?agent_id=${encodeURIComponent(agentId || "")}`, { method: "POST", headers: { "Content-Type": "application/json", Accept: "application/json" }, body: JSON.stringify({ ...body, state: _st }) });
       const data = await res.json().catch(() => null);
       if (!res.ok) { const d = data && data.detail; setInvErr((d && (d.message || (typeof d === "string" ? d : ""))) || (data && data.message) || `Server error ${res.status}`); setInvLoading(false); return; }
       setInv(data); setPayStatus(data && data.status || ""); setInvLoading(false);

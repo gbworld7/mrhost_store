@@ -6,7 +6,7 @@ import {
 } from "lucide-react";
 import { T, STATUS } from "../theme/tokens.js";
 import { api } from "../api/client.js";
-import { card, primaryBtn, ghostBtn, Back, Pic, Stars, Field, Toggle, Section, Spinner, Overlay, Empty, Avatar } from "../components/ui.jsx";
+import { card, primaryBtn, ghostBtn, Back, Pic, Stars, Field, Toggle, Section, Spinner, Overlay, Empty, Avatar, toast } from "../components/ui.jsx";
 
 const h3 = { fontFamily: T.fontDisplay, fontWeight: 800, fontSize: 18 };
 const title = (it) => (it.description || "").split("—")[0].trim() || "Untitled";
@@ -44,8 +44,9 @@ function CardDescriptionModal({ item, onClose }) {
 function Pill({ s }) { const c = STATUS[s] || T.gray2; return <span style={{ fontWeight: 700, fontSize: 12, color: c, border: `1px solid ${c}44`, borderRadius: 8, padding: "3px 9px", fontFamily: T.fontBody }}>{s}</span>; }
 
 /* -------- Cards list -------- */
-export function AdminCards({ items, onEdit, onNew }) {
+export function AdminCards({ items, onEdit, onNew, onChange }) {
   const [descOpen, setDescOpen] = useState(null);
+  const toggleVis = async (it) => { try { await api.setVisible(it.id, !it.visible); toast(it.visible ? "Hidden from public" : "Published"); onChange?.(); } catch { toast("Could not change visibility.", "error"); } };
   return (<div>
     <CardDescriptionModal item={descOpen} onClose={() => setDescOpen(null)} />
     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", margin: "4px 0 14px" }}><h3 style={h3}>Cards</h3><button onClick={onNew} style={primaryBtn}><Plus size={16} /> New card</button></div>
@@ -56,7 +57,7 @@ export function AdminCards({ items, onEdit, onNew }) {
             <div style={{ width: "100%", aspectRatio: "1/1", borderRadius: 18, overflow: "hidden", background: "#fff", position: "relative", border: `1px solid ${T.lineSoft}` }}>
               <Pic tone={(it.images || [])[0]} />
               {it.booking?.enabled && <span style={badge}><Calendar size={12} /> Booking</span>}
-              <span style={{ ...badge, left: "auto", right: 8, background: it.visible ? "rgba(31,157,85,.9)" : "rgba(17,17,17,.7)" }}>{it.visible ? <Eye size={12} /> : <EyeOff size={12} />}</span>
+              <button onClick={() => toggleVis(it)} title={it.visible ? "Published — tap to hide" : "Hidden — tap to publish"} style={{ ...badge, left: "auto", right: 8, border: "none", cursor: "pointer", background: it.visible ? "rgba(31,157,85,.95)" : "rgba(168,92,92,.95)" }}>{it.visible ? <Eye size={12} /> : <EyeOff size={12} />}</button>
             </div>
             <div style={{ fontFamily: T.fontDisplay, fontWeight: 800, margin: "16px 0 4px", fontSize: 23, letterSpacing: "-.01em" }}>{title(it)}</div>
             <p style={cardDescPreview}>{cardDescOnly(it)}</p>
@@ -97,9 +98,10 @@ export function CardEditor({ item, cats, onBack, onSaved }) {
   const save = async () => {
     if (busy) return; setBusy(true);
     const payload = { id: init.id, description: desc, price, category_id: catId, images: photos.map((p) => p.url || p.tone), video: video?.url || "", files: files.map((f) => ({ name: f.name, url: f.url, size: f.size })), booking, visible };
-    try { await api.saveCard(payload); } catch {} finally { setBusy(false); onSaved?.(); }
+    try { await api.saveCard(payload); toast(init.id ? "Card saved" : "Card created"); setBusy(false); onSaved?.(); }
+    catch { setBusy(false); toast("Could not save card. Try again.", "error"); }
   };
-  const del = async () => { if (!init.id) { onBack(); return; } try { await api.deleteCard(init.id); } catch {} onSaved?.(); };
+  const del = async () => { if (!init.id) { onBack(); return; } try { await api.deleteCard(init.id); toast("Card deleted"); } catch { toast("Could not delete card.", "error"); } onSaved?.(); };
 
   return (<div>
     <Back onClick={onBack} />
@@ -172,13 +174,14 @@ function SlotForm({ onAdd, onCancel }) {
 /* -------- Categories -------- */
 export function AdminCategories({ cats, counts, onChange }) {
   const [adding, setAdding] = useState(false); const [name, setName] = useState("");
-  const add = async () => { if (!name.trim()) return; try { await api.saveCategory({ title: name.trim() }); } catch {} setName(""); setAdding(false); onChange?.(); };
-  const del = async (id) => { try { await api.deleteCategory(id); } catch {} onChange?.(); };
+  const add = async () => { const t = name.trim(); if (!t) return; try { await api.saveCategory({ title: t }); toast(`Category "${t}" created`); setName(""); setAdding(false); onChange?.(); } catch { toast("Could not create category. Try again.", "error"); } };
+  const del = async (id) => { try { await api.deleteCategory(id); toast("Category deleted"); } catch { toast("Could not delete category.", "error"); } onChange?.(); };
+  const vis = async (c) => { const next = c.visible === false; try { await api.setCategoryVisible(c.id, next); toast(next ? "Category published" : "Category hidden from public"); onChange?.(); } catch { toast("Could not change visibility.", "error"); } };
   return (<div>
     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", margin: "4px 0 14px" }}><h3 style={h3}>Categories</h3><button onClick={() => setAdding(true)} style={primaryBtn}><Plus size={16} /> New category</button></div>
     <div style={{ ...card, display: "flex", alignItems: "center", gap: 12, marginBottom: 10, borderColor: T.blue }}><FolderOpen size={18} color={T.blue} /><div style={{ flex: 1 }}><div style={{ fontWeight: 700, color: T.blue }}>Main</div><div style={{ fontSize: 12.5, color: T.gray2 }}>All cards</div></div></div>
     {adding && <div style={{ ...card, marginBottom: 10, background: T.goldSoft, borderColor: T.gold }}><Field label="Category name" value={name} set={setName} ph="e.g. Accessories" /><div style={{ display: "flex", gap: 8 }}><button onClick={add} style={{ ...primaryBtn, flex: 1, justifyContent: "center" }}><Check size={15} /> Create</button><button onClick={() => { setAdding(false); setName(""); }} style={ghostBtn}>Cancel</button></div></div>}
-    {cats.map((c) => (<div key={c.id} style={{ ...card, display: "flex", alignItems: "center", gap: 12, marginBottom: 10 }}><Avatar name={c.title} src={c.logo || ""} size={40} /><div style={{ flex: 1 }}><div style={{ fontWeight: 700 }}>{c.title}</div><div style={{ fontSize: 12.5, color: T.gray2 }}>{counts[c.id] || 0} cards</div></div><button onClick={() => del(c.id)} style={{ ...ghostBtn, padding: "8px 11px", color: T.red, borderColor: "#eccfca" }}><Trash2 size={15} /></button></div>))}
+    {cats.map((c) => (<div key={c.id} style={{ ...card, display: "flex", alignItems: "center", gap: 12, marginBottom: 10, opacity: c.visible === false ? 0.55 : 1 }}><Avatar name={c.title} src={c.logo || ""} size={40} /><div style={{ flex: 1 }}><div style={{ fontWeight: 700 }}>{c.title}</div><div style={{ fontSize: 12.5, color: T.gray2 }}>{counts[c.id] || 0} cards</div></div><button onClick={() => vis(c)} title={c.visible === false ? "Hidden — tap to publish" : "Published — tap to hide"} style={{ ...ghostBtn, padding: "8px 11px", border: "none", color: "#fff", background: c.visible === false ? "rgba(168,92,92,.95)" : "rgba(31,157,85,.95)" }}>{c.visible === false ? <EyeOff size={15} /> : <Eye size={15} />}</button><button onClick={() => del(c.id)} style={{ ...ghostBtn, padding: "8px 11px", color: T.red, borderColor: "#eccfca" }}><Trash2 size={15} /></button></div>))}
   </div>);
 }
 
