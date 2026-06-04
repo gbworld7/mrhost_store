@@ -4,6 +4,10 @@ function agentId() {
   const u = new URL(window.location.href);
   return u.searchParams.get("agent_id") || "";
 }
+function stateParam() {
+  const u = new URL(window.location.href);
+  return u.searchParams.get("state") || "";
+}
 async function get(path, params = {}) {
   const q = new URLSearchParams({ agent_id: agentId(), ...params }).toString();
   const r = await fetch(`${BASE}${path}?${q}`);
@@ -31,8 +35,10 @@ async function upload(path, file) {
 export const api = {
   agentId,
   // public
-  list: () => get("/list"),
-  categories: () => get("/categories"),
+  list: (mode) => get("/list", mode ? { mode } : {}),
+  cabinet: (init_data) => post("/cabinet", { init_data, state: stateParam() }),
+  orders: (init_data, tab) => post("/orders", { init_data, tab: tab || "active", state: stateParam() }),
+  categories: (mode) => get("/categories", mode ? { mode } : {}),
   purchases: () => get("/purchases"),
   reviews: (item_id) => get("/reviews", { item_id }),
   addReview: (item_id, rating, body, author_name) => post("/reviews/add", { item_id, rating, body, author_name }),
@@ -47,9 +53,12 @@ export const api = {
   aiImage: (prompt) => post("/ai_generate_image", { prompt }),
   // admin: categories
   saveCategory: (cat) => post("/categories", cat),
+  setCategoryVisible: (id, visible) => post("/categories/visibility", { id, visible }),
   deleteCategory: (id) => post("/categories/delete", { id }),
   // admin: orders
   adminOrders: () => get("/admin/orders"),
+  // admin: merchant (gpay)
+  merchant: (init_data) => post("/admin/merchant", { init_data, state: stateParam() }),
   composePackage: (order_id) => post("/admin/orders/compose-print-package", { order_id }),
   // admin: reviews moderation
   adminReviews: () => get("/admin/reviews"),

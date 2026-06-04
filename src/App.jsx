@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { ShoppingCart, Store as StoreIcon } from "lucide-react";
+import { ShoppingCart, Store as StoreIcon, Heart } from "lucide-react";
 import { T } from "./theme/tokens.js";
 import { api } from "./api/client.js";
-import { Tabs, Avatar, STORE_LOGO_DRAGON } from "./components/ui.jsx";
+import { Tabs, Avatar, STORE_LOGO_DRAGON, Toaster } from "./components/ui.jsx";
 import * as P from "./screens/public.jsx";
 import * as A from "./screens/admin.jsx";
 
@@ -29,6 +29,18 @@ const DEMO = {
   stats: { views: "1,284", orders: "37", revenue: "$1,940", conversion: "2.9%" },
 };
 
+const EMPTY = { cats: [], items: [], orders: [], reviews: [], partners: [], members: [], user: { name: "", username: "", lang: "" }, ledger: [], stats: {} };
+
+const mapAdminOrder = (o) => ({
+  id: o.public_id || o.id || o.order_id || "—",
+  status: o.status || o.lifecycle_status || "new",
+  customer: o.customer || o.buyer_name || o.buyer_username || o.buyer || "—",
+  product: o.item_title || o.product || o.product_title || o.title || "—",
+  total: o.total || o.amount_usd || o.amount || o.item_price || "—",
+  prod: o.prod || o.fulfillment || "",
+  items: Array.isArray(o.items) ? o.items : [],
+});
+
 function useQuery() {
   return useMemo(() => {
     const u = new URL(window.location.href);
@@ -45,28 +57,70 @@ export default function App() {
   const isDronovod = q.agent_id === "dronovodbot" || /dronovod/i.test(q.store);
   const storeLogo = q.logo || (isDronovod ? STORE_LOGO_DRAGON : "");
   const owner = q.mode === "owner" || q.mode === "admin";
-  const [data, setData] = useState(DEMO);
+  const [data, setData] = useState(EMPTY);
   const [tab, setTab] = useState(q.mode === "owner" || q.mode === "admin" ? "cards" : "catalog");
   const [detail, setDetail] = useState(null);
   const [editing, setEditing] = useState(null);
   const [cart, setCart] = useState([]);
+  const [cabinet, setCabinet] = useState(null);
+  const [myOrders, setMyOrders] = useState(null);
   const [pay, setPay] = useState(false);
   const [selectedCat, setSelectedCat] = useState("all");
+  const [favs, setFavs] = useState({});
+  const toggleFav = (id) => setFavs((f) => ({ ...f, [id]: !f[id] }));
+  const favCount = Object.values(favs).filter(Boolean).length;
+  const itemTitle = (x) => (x.title || String(x.description || "").split("\u2014")[0].trim() || "Item");
+  const checkout = () => {
+    const W = typeof window !== "undefined" ? window.W2Checkout : null;
+    if (W && W.open) {
+      W.open({
+        mode: "goods",
+        items: cart.map((x) => ({ id: String(x.id), title: itemTitle(x), qty: x.qty, price: Number(x.price) })),
+        total: cart.reduce((s, x) => s + Number(x.price) * x.qty, 0),
+        storeName: q.store || "Store",
+        agentId: q.agent_id,
+        source: "agent_store",
+        apiBase: "https://api.mrhost.asia",
+        activeMethods: ["gpay", "usdt"],
+      });
+    } else {
+      setPay(true);
+    }
+  };
 
   const reload = () => {
-    Promise.allSettled([api.list(), api.categories()]).then(([l, c]) => {
+    Promise.allSettled([api.list(owner ? "owner" : "public"), api.categories(owner ? "owner" : "public")]).then(([l, c]) => {
       setData((d) => ({ ...d, items: (l.value?.items || l.value) || d.items, cats: (c.value?.categories || c.value) || d.cats }));
     }).catch(() => {});
   };
   useEffect(() => { reload(); /* admin extras load lazily on tab open */ }, []);
+
+  const tgUser = (typeof window !== "undefined" && window.Telegram?.WebApp?.initDataUnsafe?.user) || null;
+  const cabUser = tgUser
+    ? { name: [tgUser.first_name, tgUser.last_name].filter(Boolean).join(" ") || tgUser.username || "You", username: tgUser.username || "", lang: (tgUser.language_code || "en").toUpperCase() }
+    : data.user;
+  useEffect(() => {
+    if (tab !== "cabinet" || cabinet) return;
+    const initData = (typeof window !== "undefined" && window.Telegram?.WebApp?.initData) || "";
+    api.cabinet(initData).then(setCabinet).catch(() => setCabinet({ authed: false }));
+  }, [tab]);
+  useEffect(() => {
+    if (tab !== "myorders" || myOrders) return;
+    const initData = (typeof window !== "undefined" && window.Telegram?.WebApp?.initData) || "";
+    api.orders(initData, "active").then(setMyOrders).catch(() => setMyOrders({ authed: false, orders: [] }));
+  }, [tab]);
+  useEffect(() => {
+    if (!owner || tab !== "orders") return;
+    api.adminOrders().then((r) => setData((d) => ({ ...d, orders: (r?.orders || []).map(mapAdminOrder) }))).catch(() => {});
+  }, [tab, owner]);
 
   const counts = useMemo(() => { const m = {}; data.items.forEach((i) => { if (i.category_id) m[i.category_id] = (m[i.category_id] || 0) + 1; }); return m; }, [data.items]);
   const publicItems = data.items.filter((i) => i.visible !== false);
   const add = (it) => { setCart((c) => { const f = c.find((x) => x.id === it.id); return f ? c.map((x) => x.id === it.id ? { ...x, qty: x.qty + 1 } : x) : [...c, { ...it, qty: 1 }]; }); setDetail(null); setTab("cart"); };
   const count = cart.reduce((s, x) => s + x.qty, 0);
 
-  const pubTabs = [{ key: "catalog", label: "Catalog" }, { key: "categories", label: "Categories" }, { key: "rating", label: "Rating" }, { key: "purchases", label: "Purchases" }, { key: "partner", label: "Partner" }, { key: "cabinet", label: "Cabinet" }, { key: "cart", label: `Cart${count ? " · " + count : ""}` }];
-  const admTabs = [{ key: "cards", label: "Cards" }, { key: "categories", label: "Categories" }, { key: "orders", label: "Orders" }, { key: "reviews", label: "Reviews" }, { key: "partners", label: "Partners" }, { key: "print", label: "Print" }, { key: "analytics", label: "Analytics" }, { key: "team", label: "Team" }];
+  const pubTabs = [{ key: "catalog", label: "Catalog" }, { key: "categories", label: "Categories" }, { key: "rating", label: "Rating" }, { key: "purchases", label: "Purchases" }, { key: "partner", label: "Partner" }, { key: "myorders", label: "My Orders" }, { key: "cabinet", label: "Cabinet" }, { key: "cart", label: `Cart${count ? " · " + count : ""}` }];
+  const admTabs = [{ key: "cards", label: "Cards" }, { key: "categories", label: "Categories" }, { key: "orders", label: "Orders" }, { key: "merchant", label: "Merchant" }, { key: "reviews", label: "Reviews" }, { key: "partners", label: "Partners" }, { key: "print", label: "Print" }, { key: "analytics", label: "Analytics" }, { key: "team", label: "Team" }];
 
   return (
     <div style={{ background: T.page, minHeight: "100vh", fontFamily: T.fontBody, color: T.ink }}>
@@ -77,6 +131,7 @@ export default function App() {
             <div><div style={{ fontFamily: T.fontDisplay, fontWeight: 800, fontSize: 17, lineHeight: 1 }}>{q.store || "Your Store"}</div><div style={{ fontSize: 11.5, color: T.gray2 }}>powered by ShopLink</div></div>
           </div>
           <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 10 }}>
+            {!owner && <button onClick={() => { setTab("favorites"); setDetail(null); }} aria-label="Favorites" style={{ position: "relative", border: `1px solid ${T.line}`, background: "#fff", borderRadius: 12, padding: "9px 11px", cursor: "pointer" }}><Heart size={18} color={favCount ? T.orange : "#111"} fill={favCount ? T.orange : "none"} />{favCount > 0 && <span style={{ position: "absolute", top: -6, right: -6, background: T.orange, color: "#fff", borderRadius: 10, fontSize: 11, fontWeight: 700, padding: "1px 6px" }}>{favCount}</span>}</button>}
             {!owner && <button onClick={() => { setTab("cart"); setDetail(null); }} style={{ position: "relative", border: `1px solid ${T.line}`, background: "#fff", borderRadius: 12, padding: "9px 11px", cursor: "pointer" }}><ShoppingCart size={18} />{count > 0 && <span style={{ position: "absolute", top: -6, right: -6, background: T.orange, color: "#fff", borderRadius: 10, fontSize: 11, fontWeight: 700, padding: "1px 6px" }}>{count}</span>}</button>}
             {owner && <span style={{ border: `1.5px solid ${T.gold}`, background: T.goldSoft, color: "#8A6D2F", borderRadius: 12, padding: "8px 13px", fontFamily: T.fontBody, fontWeight: 700, fontSize: 13.5 }}>Admin</span>}
           </div>
@@ -86,21 +141,30 @@ export default function App() {
 
         <div style={{ marginTop: 16 }}>
           {!owner && (<>
-            {tab === "catalog" && !detail && <P.Catalog items={publicItems} cats={data.cats} selectedCat={selectedCat} onSelectCat={setSelectedCat} onOpen={setDetail} onAdd={add} />}
+            {tab === "catalog" && !detail && <P.Catalog items={publicItems} cats={data.cats} selectedCat={selectedCat} onSelectCat={setSelectedCat} onOpen={setDetail} onAdd={add} favs={favs} onToggleFav={toggleFav} />}
             {tab === "catalog" && detail && <P.Item item={detail} onBack={() => setDetail(null)} onAdd={add} />}
             {tab === "categories" && <P.Categories cats={data.cats} counts={counts} onPick={(id) => { setSelectedCat(id); setTab("catalog"); }} />}
             {tab === "rating" && <P.Rating items={publicItems} />}
-            {tab === "purchases" && <P.Purchases orders={data.orders} />}
+            {tab === "purchases" && <P.Purchases orders={[]} />}
             {tab === "partner" && <P.PartnerApply />}
-            {tab === "cabinet" && <P.Cabinet user={data.user} balance="3.30" ledger={data.ledger} />}
-            {tab === "cart" && <P.Cart cart={cart} setCart={setCart} onCheckout={() => setPay(true)} />}
+            {tab === "myorders" && <P.MyOrders data={myOrders} />}
+            {tab === "cabinet" && <P.Cabinet user={cabUser} cabinet={cabinet} fallbackLedger={data.ledger} />}
+            {tab === "favorites" && (<>
+              <button onClick={() => setTab("catalog")} style={{ display: "inline-flex", alignItems: "center", gap: 6, border: "none", background: "#EFEDE7", color: T.ink, borderRadius: 999, padding: "8px 14px", fontFamily: T.fontBody, fontWeight: 700, fontSize: 13.5, cursor: "pointer", marginBottom: 14 }}>‹ Back to catalog</button>
+              <P.Catalog items={publicItems.filter((i) => favs[i.id])} cats={data.cats} selectedCat="all" onSelectCat={() => {}} onOpen={setDetail} onAdd={add} favs={favs} onToggleFav={toggleFav} />
+            </>)}
+            {tab === "cart" && (<>
+              <button onClick={() => setTab("catalog")} style={{ display: "inline-flex", alignItems: "center", gap: 6, border: "none", background: "#EFEDE7", color: T.ink, borderRadius: 999, padding: "8px 14px", fontFamily: T.fontBody, fontWeight: 700, fontSize: 13.5, cursor: "pointer", marginBottom: 14 }}>‹ Back to catalog</button>
+              <P.Cart cart={cart} setCart={setCart} onCheckout={checkout} />
+            </>)}
           </>)}
 
           {owner && (<>
-            {tab === "cards" && !editing && <A.AdminCards items={data.items} onEdit={(it) => setEditing(it)} onNew={() => setEditing({ _new: true })} />}
+            {tab === "cards" && !editing && <A.AdminCards items={data.items} onEdit={(it) => setEditing(it)} onNew={() => setEditing({ _new: true })} onChange={reload} />}
             {tab === "cards" && editing && <A.CardEditor item={editing._new ? null : editing} cats={data.cats} onBack={() => setEditing(null)} onSaved={() => { setEditing(null); reload(); }} />}
             {tab === "categories" && <A.AdminCategories cats={data.cats} counts={counts} onChange={reload} />}
             {tab === "orders" && <A.Orders orders={data.orders} />}
+            {tab === "merchant" && <A.MerchantPanel />}
             {tab === "reviews" && <A.ReviewsAdmin reviews={data.reviews} />}
             {tab === "partners" && <A.Partners partners={data.partners} />}
             {tab === "print" && <A.PrintDesigns items={data.items} />}
@@ -111,6 +175,7 @@ export default function App() {
 
         {pay && <P.PaySheet cart={cart} onClose={() => setPay(false)} agentId={q.agent_id} storeName={q.store} />}
       </div>
+      <Toaster />
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   Plus, Trash2, X, Check, ChevronLeft, ChevronDown, ChevronRight, Upload, Eye, EyeOff,
   Star, MessageCircle, Package, BarChart3, FileArchive, Reply, Image as ImageIcon, FileText,
@@ -280,5 +280,54 @@ export function Team({ members }) {
     <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
       {list.map((m) => (<div key={m.id} style={{ ...card, display: "flex", alignItems: "center", gap: 12 }}><div style={{ width: 40, height: 40, borderRadius: "50%", background: T.goldSoft, color: T.goldDeep, display: "grid", placeItems: "center", fontFamily: T.fontDisplay, fontWeight: 700 }}>{m.name[0]}</div><div style={{ flex: 1 }}><div style={{ fontWeight: 700 }}>{m.name}</div></div><span style={{ fontSize: 12, fontWeight: 700, color: rc[m.role], border: `1px solid ${rc[m.role]}44`, borderRadius: 8, padding: "3px 10px" }}>{m.role}</span>{m.role !== "Owner" && <button onClick={() => setList((l) => l.filter((x) => x.id !== m.id))} style={{ border: "none", background: "none", cursor: "pointer", color: T.gray2 }}><Trash2 size={16} /></button>}</div>))}
     </div>
+  </div>);
+}
+
+
+/* -------- Merchant (GPay) -------- */
+export function MerchantPanel() {
+  const [state, setState] = useState({ loading: true, ok: false, data: null });
+  useEffect(() => {
+    const initData = (typeof window !== "undefined" && window.Telegram?.WebApp?.initData) || "";
+    api.merchant(initData)
+      .then((r) => setState({ loading: false, ok: !!(r && (r.status || r.dashboard)), data: r }))
+      .catch(() => setState({ loading: false, ok: false, data: null }));
+  }, []);
+  const r = state.data || {};
+  const st = r.status || {};
+  const d = r.dashboard || null;
+  const copy = (v) => { if (!v) return; try { navigator.clipboard.writeText(v); toast("Copied"); } catch {} };
+  const trunc = (a) => (!a ? "—" : a.length <= 12 ? a : `${a.slice(0, 6)}…${a.slice(-4)}`);
+  const num = (v, dg) => Number(v || 0).toLocaleString("en-US", { maximumFractionDigits: dg });
+  const dot = (c) => ({ width: 8, height: 8, borderRadius: "50%", background: c, display: "inline-block" });
+  const copyBtn = { ...ghostBtn, padding: "4px 9px", fontSize: 11.5 };
+  const addr = { fontSize: 11, color: T.gray2, fontFamily: "monospace", overflow: "hidden", textOverflow: "ellipsis" };
+
+  return (<div>
+    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", margin: "4px 0 14px" }}>
+      <h3 style={h3}>Merchant</h3>
+      <span style={{ fontSize: 12, fontWeight: 700, color: d?.online ? T.green : T.gray2, border: `1px solid ${(d?.online ? T.green : T.gray2)}44`, borderRadius: 8, padding: "3px 9px" }}>{d?.online ? "● on-chain" : state.loading ? "…" : "—"}</span>
+    </div>
+    {state.loading ? <div style={{ display: "grid", placeItems: "center", padding: "40px 0" }}><Spinner /></div> : !state.ok ? (
+      <Empty text="Merchant not connected" sub="Pass merchant verification on mrhost.asia to receive USDT payouts here." />
+    ) : (<>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(2,1fr)", gap: 12, marginBottom: 12 }}>
+        <div style={card}>
+          <div style={{ display: "flex", alignItems: "center", gap: 7, color: T.gray2, marginBottom: 6 }}><span style={dot(T.green)} /><span style={{ fontSize: 12.5 }}>Кошелёк приёма</span></div>
+          <div style={{ fontFamily: T.fontDisplay, fontWeight: 800, fontSize: 24 }}>{d ? num(d.collect?.usdt, 2) : "—"} <span style={{ fontSize: 12, color: T.gray2 }}>USDT</span></div>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 8 }}><span style={addr}>{trunc(st.collect_wallet)} · {st.network || "POLYGON"}</span>{st.collect_wallet && <button onClick={() => copy(st.collect_wallet)} style={copyBtn}>Копировать</button>}</div>
+        </div>
+        <div style={card}>
+          <div style={{ display: "flex", alignItems: "center", gap: 7, color: T.gray2, marginBottom: 6 }}><span style={dot(T.blue)} /><span style={{ fontSize: 12.5 }}>Газ-кошелёк</span></div>
+          <div style={{ fontFamily: T.fontDisplay, fontWeight: 800, fontSize: 24 }}>{d ? num(d.gas?.matic, 4) : "—"} <span style={{ fontSize: 12, color: T.gray2 }}>POL</span></div>
+          <div style={{ fontSize: 11.5, color: T.gray2, marginTop: 4 }}>Пополните POL — из него платится газ</div>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 8 }}><span style={addr}>{trunc(st.gas_wallet)}</span>{st.gas_wallet && <button onClick={() => copy(st.gas_wallet)} style={copyBtn}>Копировать</button>}</div>
+        </div>
+      </div>
+      <div style={{ ...card, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <span style={{ fontSize: 13, color: T.gray2 }}>Продажи (оплачено)</span>
+        <span style={{ fontFamily: T.fontDisplay, fontWeight: 800, color: T.orange }}>{d ? `$${num(d.sales?.usdt_total, 2)} · ${d.sales?.orders_count || 0}` : "—"}</span>
+      </div>
+    </>)}
   </div>);
 }
