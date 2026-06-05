@@ -4,3 +4,15 @@ dist/
 *.log
 .env
 .env.*
+*.bak
+*.bak_*
+*.before_*
+*~
+dist_new/
+dist_test/
+dist_rb/
+dist.before_promote_*/
+dist.GOOD_*/
+*.tgz
+__pycache__/
+*.pyc
