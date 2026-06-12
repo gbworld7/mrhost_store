@@ -52,7 +52,7 @@
   ".w2co-fld{margin-bottom:12px;width:100%}.w2co-fld.half{width:calc(50% - 5px)}" +
   ".w2co-lbl{font-size:11px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px;display:flex;align-items:center;gap:4px}" +
   ".w2co-lbl .req{color:#CDC9BE;font-size:13px}.w2co-fld.err .w2co-lbl{color:#E52D2D}.w2co-fld.err .w2co-lbl .req{color:#E52D2D}" +
-  ".w2co-inwrap{display:flex;align-items:center;border:1.5px solid #E0E0E0;border-radius:13px;background:#fff;transition:border-color .15s,box-shadow .15s}" +
+  ".w2co-inwrap{display:flex;align-items:center;box-sizing:border-box;height:47px;border:1.5px solid #E0E0E0;border-radius:13px;background:#fff;transition:border-color .15s,box-shadow .15s}" +
   ".w2co-inwrap.f{border-color:#c5a059;box-shadow:0 0 0 3px rgba(197,160,89,.16)}" +
   ".w2co-fld.err .w2co-inwrap{border-color:#E52D2D;box-shadow:0 0 0 3px rgba(229,45,45,.10)}" +
   ".w2co-inwrap input{flex:1;min-width:0;border:none;outline:none;background:transparent;padding:12px 14px;font:inherit;font-size:15px;color:#111}" +
@@ -60,8 +60,9 @@
   ".w2co-tick{margin-right:12px;flex-shrink:0;color:#2e9e5b;font-weight:800}" +
   ".w2co-bang{margin-right:12px;flex-shrink:0;color:#E52D2D;font-weight:800;font-size:16px;line-height:1}" +
   ".w2co-ferr{color:#E52D2D;font-size:12px;margin-top:4px;font-weight:600}" +
-  ".w2co-sel{width:100%;box-sizing:border-box;border:1.5px solid #E0E0E0;border-radius:13px;padding:12px 14px;font:inherit;font-size:15px;outline:none;background:#fff;cursor:pointer;color:#111}" +
+  ".w2co-sel{width:100%;box-sizing:border-box;height:47px;line-height:44px;border:1.5px solid #E0E0E0;border-radius:13px;padding:0 14px;font:inherit;font-size:15px;outline:none;background:#fff;cursor:pointer;color:#111}" +
   ".w2co-sel:focus{border-color:#c5a059;box-shadow:0 0 0 3px rgba(197,160,89,.16)}" +
+  ".w2co-inwrap > select{flex:1;min-width:0;width:100%;height:100%;border:none;outline:none;background:transparent;padding:0 14px;font:inherit;font-size:15px;color:#111;cursor:pointer}" +
   ".w2co-cta{width:100%;border:none;border-radius:14px;background:#111;color:#fff;padding:15px;font:inherit;font-weight:800;font-size:15px;cursor:pointer;margin-top:6px;transition:.15s;letter-spacing:.01em}" +
   ".w2co-cta:hover{background:#000}.w2co-cta:disabled{opacity:.4;cursor:not-allowed}" +
   ".w2co-back{display:inline-flex;gap:4px;align-items:center;background:none;border:none;color:#666;font:inherit;font-weight:600;font-size:14px;cursor:pointer;padding:0;width:100%;justify-content:center;text-align:center;margin-top:14px}" +
@@ -143,6 +144,7 @@
   function isPaid(s) { return PAID.indexOf(String(s || "").toLowerCase()) >= 0; }
   function isDead(s) { return DEAD.indexOf(String(s || "").toLowerCase()) >= 0; }
   function fmtAmt(v) { var n = Number(v); return Number.isFinite(n) ? String(n) : String(v == null ? "" : v); }
+  function fmtVnd(v) { var n = Number(String(v == null ? "" : v).replace(/[^0-9.-]/g, "")); return isFinite(n) ? new Intl.NumberFormat("vi-VN").format(Math.round(n)) : String(v == null ? "" : v); }
 
   /* SVG-with-text-fallback payment logo */
   function payLogo(id, iconBase, on) {
@@ -159,6 +161,17 @@
   }
 
   /* ------------------------------- main open ------------------------------ */
+  /* W2_CHECKOUT_PREFILL_VND_V1 */
+  var _W2_VND_RATE = null;
+  function ensureVndRate(cb) {
+    if (_W2_VND_RATE != null) { cb(_W2_VND_RATE); return; }
+    try {
+      fetch("https://open.er-api.com/v6/latest/USD")
+        .then(function (r) { return r.json(); })
+        .then(function (d) { var rt = d && d.rates && d.rates.VND; if (rt && rt > 0) _W2_VND_RATE = rt; cb(_W2_VND_RATE); })
+        .catch(function () { cb(null); });
+    } catch (e) { cb(null); }
+  }
   function open(opts) {
     opts = opts || {};
     injectCSS();
@@ -177,21 +190,21 @@
       : (MODE === "subscription"
           ? Number((opts.plan && opts.plan.priceUsd) || 0)
           : items.reduce(function (s, x) { return s + x.price * x.qty; }, 0));
+    var amountVnd = opts.amountVnd != null ? Number(opts.amountVnd) : null;
 
     // state
-    var f = { fname: "", lname: "", email: "", phone: "", addr: "", city: "", zip: "", country: (countries()[0] || {}).code || "VN" };
-    /* W2_PREFILL_V1 — optional address pre-fill (site uses MyAddress; mini-app omits) */
+    var f = { fname: "", lname: "", email: "", phone: "", addr: "", city: "", zip: "", state: "", country: (countries()[0] || {}).code || "VN", promo: "" }; /* W2_CHECKOUT_STATE_FULLNAME_V1 */
     if (opts.prefill) {
-      var __pf = opts.prefill;
-      var __ps = function (v) { return v == null ? "" : String(v); };
-      if (__pf.first_name)   f.fname   = __ps(__pf.first_name);
-      if (__pf.last_name)    f.lname   = __ps(__pf.last_name);
-      if (__pf.email)        f.email   = __ps(__pf.email);
-      if (__pf.phone)        f.phone   = __ps(__pf.phone);
-      if (__pf.address1)     f.addr    = __ps(__pf.address1);
-      if (__pf.city)         f.city    = __ps(__pf.city);
-      if (__pf.zip_code)     f.zip     = __ps(__pf.zip_code);
-      if (__pf.country_code) f.country = __ps(__pf.country_code);
+      var _pf = opts.prefill;
+      if (_pf.first_name) f.fname = String(_pf.first_name);
+      if (_pf.last_name) f.lname = String(_pf.last_name);
+      if (_pf.email) f.email = String(_pf.email);
+      if (_pf.phone) f.phone = String(_pf.phone).replace(/^\+\d{1,4}\s*/, "");
+      if (_pf.address1) f.addr = String(_pf.address1);
+      if (_pf.city) f.city = String(_pf.city);
+      if (_pf.zip_code) f.zip = String(_pf.zip_code);
+      if (_pf.country_code) f.country = String(_pf.country_code);
+      if (_pf.state_code) f.state = String(_pf.state_code);
     }
     var touched = {}, submitted = false;
     var method = ACTIVE.indexOf("usdt") >= 0 ? "usdt" : ACTIVE[0] || "usdt";
@@ -271,23 +284,28 @@
       if (err) wrap.appendChild(h("div", { class: "w2co-ferr" }, err));
       return wrap;
     }
-    function selCountry() {
-      var wrap = h("div", { class: "w2co-fld" });
+    function selCountry(opt) {
+      opt = opt || {};
+      var wrap = h("div", { class: "w2co-fld" + (opt.half ? " half" : "") });
       wrap.appendChild(h("div", { class: "w2co-lbl" }, ["Country", h("span", { class: "req" }, "*")]));
-      var sel = h("select", { class: "w2co-sel" });
+      var inwrap = h("div", { class: "w2co-inwrap" });
+      var sel = h("select", {});
       countries().forEach(function (c) {
         var o = h("option", { value: c.code }, (c.flag ? c.flag + "  " : "") + c.name);
         if (c.code === f.country) o.selected = true;
         sel.appendChild(o);
       });
       sel.addEventListener("change", function () { f.country = sel.value; render(); });
-      wrap.appendChild(sel);
+      sel.addEventListener("focus", function () { inwrap.classList.add("f"); });
+      sel.addEventListener("blur", function () { inwrap.classList.remove("f"); });
+      inwrap.appendChild(sel);
+      wrap.appendChild(inwrap);
       return wrap;
     }
 
     function deliveryValid() {
       return f.fname.trim() && f.lname.trim() && f.email.trim() && EMAIL_RE.test(f.email) &&
-             f.addr.trim() && f.city.trim() && f.zip.trim();
+             f.addr.trim() && f.city.trim() && f.zip.trim() && f.state.trim();
     }
 
     /* ----- STAGE: delivery ----- */
@@ -308,7 +326,11 @@
         field("city", "City", "Nha Trang", true, { half: true }),
         field("zip", "ZIP / Postal", "000000", true, { half: true })
       ]));
-      sheet.appendChild(selCountry());
+      sheet.appendChild(field("state", "State / Region", "Khanh Hoa", true));
+      sheet.appendChild(h("div", { class: "w2co-row" }, [
+        selCountry({ half: true }),
+        field("promo", "Code", "Promo / code", false, { half: true })
+      ]));
       if (submitted && !deliveryValid()) sheet.appendChild(h("div", { class: "w2co-formwarn" }, "Please fill the highlighted fields."));
       sheet.appendChild(h("button", { class: "w2co-cta", onclick: function () {
         if (deliveryValid()) { stage = "confirm"; render(); } else { submitted = true; render(); }
@@ -363,6 +385,9 @@
       if (method === "usdt") {
         panel.appendChild(h("div", { class: "w2co-net" }, h("span", { class: "w2co-pill" }, "POLYGON")));
         panel.appendChild(h("div", { class: "w2co-muted" }, "Polygon selected. Pay in USDT — the invoice opens on the next step."));
+      } else if (method === "vietqr") {
+        panel.appendChild(h("div", { class: "w2co-net" }, h("span", { class: "w2co-pill" }, "VietQR")));
+        panel.appendChild(h("div", { class: "w2co-muted" }, "Bank transfer via VietQR — the invoice with QR opens on the next step."));
       } else if (method === "gpay") {
         var t = h("div", { class: "w2co-ptitle" }); t.innerHTML = "<span class='g'>G</span>Pay balance";
         panel.appendChild(t);
@@ -372,11 +397,16 @@
       }
       sheet.appendChild(panel);
 
-      var canPay = method === "usdt";
+      var canPay = method === "usdt" || method === "vietqr";
       sheet.appendChild(h("button", {
         class: "w2co-cta", disabled: canPay ? null : "disabled",
-        onclick: function () { if (canPay) createInvoice(); }
-      }, canPay ? "Pay with USDT POLYGON" : "Select USDT to continue"));
+        onclick: function () {
+          if (!canPay) return;
+          if (method === "vietqr" && amountVnd == null) {
+            ensureVndRate(function (rt) { if (rt) amountVnd = Math.round(total * rt); createInvoice(); });
+          } else { createInvoice(); }
+        }
+      }, !canPay ? "Select a payment method" : (method === "vietqr" ? "Pay with VietQR" : "Pay with USDT POLYGON")));
 
       if (MODE === "goods") sheet.appendChild(h("button", { class: "w2co-back", onclick: function () { stage = "confirm"; render(); }, html: "&#8249; Back to order preview" }));
     }
@@ -394,28 +424,32 @@
             qty: 1,
             amount_usd: String(total),
             currency: "USD",
-            metadata: { agent_id: opts.agentId || "", source: opts.source || "subscription", store: STORE, plan: p.title || "", email: f.email }
+            metadata: Object.assign({ agent_id: opts.agentId || "", source: opts.source || "subscription", store: STORE, plan: p.title || "", email: f.email }, opts.extra || {})
           },
           payment: { method: "USDT", network: "POLYGON" }
         };
       }
       var single = items.length === 1 ? items[0] : null;
+      var ord = {
+        product_id: single ? single.id : "cart",
+        product_title: single ? single.title : (items.length + " items · " + STORE),
+        product_kind: opts.productKind || "agent_store_item",
+        qty: items.reduce(function (s, x) { return s + x.qty; }, 0),
+        amount_usd: String(total),
+        currency: "USD",
+        metadata: Object.assign({ agent_id: opts.agentId || "", source: opts.source || "agent_store", store: STORE, items: items, email: f.email, promo_code: f.promo }, opts.extra || {})
+      };
+      if (method === "vietqr" && amountVnd != null) ord.amount_vnd = String(amountVnd);
       return {
-        order: {
-          product_id: single ? single.id : "cart",
-          product_title: single ? single.title : (items.length + " items · " + STORE),
-          product_kind: opts.productKind || "agent_store_item",
-          qty: items.reduce(function (s, x) { return s + x.qty; }, 0),
-          amount_usd: String(total),
-          currency: "USD",
-          metadata: { agent_id: opts.agentId || "", source: opts.source || "agent_store", store: STORE, items: items, email: f.email }
-        },
+        order: ord,
         shipping: {
+          full_name: (f.fname + " " + f.lname).trim(), name: (f.fname + " " + f.lname).trim(),
           first_name: f.fname, last_name: f.lname, email: f.email,
           phone: f.phone ? (c.dial + " " + f.phone).trim() : "",
-          address1: f.addr, city: f.city, zip_code: f.zip, country_code: f.country
+          address1: f.addr, city: f.city, state_code: f.state, state: f.state,
+          zip_code: f.zip, country_code: f.country, country: f.country
         },
-        payment: { method: "USDT", network: "POLYGON" }
+        payment: method === "vietqr" ? { method: "VIETQR" } : { method: "USDT", network: "POLYGON" }
       };
     }
 
@@ -470,8 +504,9 @@
 
     /* ----- STAGE: invoice ----- */
     function renderInvoice() {
-      sheet.appendChild(h("h3", { class: "w2co-h" }, "Pay with USDT POLYGON"));
-      sheet.appendChild(h("div", { class: "w2co-sub" }, "Scan QR or copy the wallet address."));
+      var isVqr = (inv && inv.provider === "vietqr") || (!inv && method === "vietqr");
+      sheet.appendChild(h("h3", { class: "w2co-h" }, isVqr ? "Pay with VietQR" : "Pay with USDT POLYGON"));
+      sheet.appendChild(h("div", { class: "w2co-sub" }, isVqr ? "Scan in your banking app or transfer manually." : "Scan QR or copy the wallet address."));
 
       if (invLoading) { sheet.appendChild(h("div", { class: "w2co-card", html: "<div style='text-align:center;padding:24px;color:#666'>Creating invoice…</div>" })); appendBack(); return; }
       if (invErr) {
@@ -485,8 +520,30 @@
       if (isPaid(payStatus)) {
         var pc = h("div", { class: "w2co-card w2co-paid" });
         pc.innerHTML = "<div class='ic'>✓</div><div class='tt'>Payment received</div>" +
-          "<div class='w2co-muted'>Your order is created and USDT is credited. Check <b style='color:#111'>" + (f.email || "your email") + "</b> to verify and open your cabinet.</div>";
+          "<div class='w2co-muted'>Your order is created and your payment is confirmed. Check <b style='color:#111'>" + (f.email || "your email") + "</b> to verify and open your cabinet.</div>";
         sheet.appendChild(pc); return;
+      }
+
+      if (inv.provider === "vietqr") {
+        var bank = inv.bank || {};
+        var vnd = fmtVnd(inv.amount_vnd || inv.amount || inv.exact_amount);
+        var ref = inv.transfer_content || inv.reference || "";
+        var prodV = MODE === "subscription" ? ((opts.plan && opts.plan.title) || "Subscription") : (items.length === 1 ? items[0].title : items.length + " items");
+        var stV = payStatus || inv.status || "waiting_payment";
+        var cardV = h("div", { class: "w2co-card" });
+        if (inv.qr_data_url) { var qbV = h("div", { class: "w2co-qr" }); qbV.appendChild(h("img", { alt: "VietQR", src: inv.qr_data_url })); cardV.appendChild(qbV); }
+        cardV.appendChild(h("div", { class: "w2co-bigamt", html: vnd + " <span>₫</span>" }));
+        cardV.appendChild(h("div", { class: "w2co-muted", style: "text-align:center;margin:4px 0 8px", html: "Transfer the exact amount with the exact content below." }));
+        [["Order", inv.order_id], ["Product", prodV], ["Bank", bank.bank_name], ["Account holder", bank.account_holder], ["Account number", bank.account_number], ["Amount (VND)", vnd], ["Transfer content", ref], ["Status", stV]].forEach(function (r) {
+          cardV.appendChild(h("div", { class: "w2co-irow" }, [h("span", { class: "k" }, r[0]), h("span", { class: "v" }, r[1] || "—")]));
+        });
+        sheet.appendChild(cardV);
+        var cpV = h("button", { class: "w2co-copy" + (copied ? " ok" : "") }, copied ? "✓ Copied" : "Copy transfer content");
+        cpV.addEventListener("click", function () { try { navigator.clipboard.writeText(ref); } catch (e) {} copied = true; render(); setTimeout(function () { copied = false; if (!destroyed && stage === "invoice") render(); }, 1300); });
+        sheet.appendChild(cpV);
+        sheet.appendChild(h("div", { class: "w2co-note", html: "Transfer <b>" + vnd + " ₫</b> with content <b>" + ref + "</b>. Payment is detected automatically." }));
+        appendBack();
+        return;
       }
 
       var amt = fmtAmt(inv.exact_amount || inv.amount_requested);
