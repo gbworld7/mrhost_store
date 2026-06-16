@@ -55,7 +55,7 @@
   ".w2co-inwrap{display:flex;align-items:center;box-sizing:border-box;height:47px;border:1.5px solid #E0E0E0;border-radius:13px;background:#fff;transition:border-color .15s,box-shadow .15s}" +
   ".w2co-inwrap.f{border-color:#c5a059;box-shadow:0 0 0 3px rgba(197,160,89,.16)}" +
   ".w2co-fld.err .w2co-inwrap{border-color:#E52D2D;box-shadow:0 0 0 3px rgba(229,45,45,.10)}" +
-  ".w2co-inwrap input{flex:1;min-width:0;border:none;outline:none;background:transparent;padding:12px 14px;font:inherit;font-size:15px;color:#111}" +
+  ".w2co-inwrap input{flex:1;min-width:0;border:none;outline:none;background:transparent;padding:12px 14px;font:inherit;font-size:15px;color:#111;caret-color:#111;-webkit-text-fill-color:#111;color-scheme:light}" +
   ".w2co-adorn{padding:0 8px 0 12px;color:#555;font-size:14px;white-space:nowrap;display:flex;align-items:center;gap:5px;border-right:1px solid #eee}" +
   ".w2co-tick{margin-right:12px;flex-shrink:0;color:#2e9e5b;font-weight:800}" +
   ".w2co-bang{margin-right:12px;flex-shrink:0;color:#E52D2D;font-weight:800;font-size:16px;line-height:1}" +
@@ -262,26 +262,43 @@
 
     /* ----- field builders ----- */
     function field(key, label, ph, required, opt) {
+      /* W2CO_FAST_INPUT_V1 — build once, NO full-form re-render on blur (that was the
+         Telegram flicker + focus loss between fields). Value commits to f[key] on input;
+         validation is painted in place, per field. */
       opt = opt || {};
-      var err = (required && (touched[key] || submitted))
-        ? (key === "email"
-            ? (!f.email.trim() ? "Required" : (!EMAIL_RE.test(f.email) ? "Enter a valid email" : ""))
-            : (!String(f[key]).trim() ? "Required" : ""))
-        : "";
-      var wrap = h("div", { class: "w2co-fld" + (opt.half ? " half" : "") + (err ? " err" : "") });
+      var AC = { fname:"given-name", lname:"family-name", email:"email", phone:"tel", addr:"address-line1", city:"address-level2", zip:"postal-code", state:"address-level1" };
+      var IM = { email:"email", phone:"tel", zip:"numeric" };
+      var wrap = h("div", { class: "w2co-fld" + (opt.half ? " half" : "") });
       var lbl = h("div", { class: "w2co-lbl" }, [label, required ? h("span", { class: "req" }, "*") : null]);
       var inwrap = h("div", { class: "w2co-inwrap" });
       if (opt.adorn) inwrap.appendChild(h("div", { class: "w2co-adorn", html: opt.adorn }));
       var input = h("input", { type: opt.type || "text", value: f[key], placeholder: ph || "" });
-      input.addEventListener("input", function () { f[key] = input.value; });
-      input.addEventListener("focus", function () { inwrap.classList.add("f"); });
-      input.addEventListener("blur", function () { inwrap.classList.remove("f"); touched[key] = true; render(); });
+      input.__w2key = key;
+      if (AC[key]) input.setAttribute("autocomplete", AC[key]);
+      if (IM[key]) input.setAttribute("inputmode", IM[key]);
       inwrap.appendChild(input);
-      var ok = required && f[key] && String(f[key]).trim() && !err && (key !== "email" || EMAIL_RE.test(f.email));
-      if (ok) inwrap.appendChild(h("span", { class: "w2co-tick" }, "✓"));
-      else if (err) inwrap.appendChild(h("span", { class: "w2co-bang" }, "!"));
       wrap.appendChild(lbl); wrap.appendChild(inwrap);
-      if (err) wrap.appendChild(h("div", { class: "w2co-ferr" }, err));
+      var statusNode = null, ferrNode = null;
+      function computeErr() {
+        if (!required) return "";
+        if (key === "email") return !f.email.trim() ? "Required" : (!EMAIL_RE.test(f.email) ? "Enter a valid email" : "");
+        return !String(f[key]).trim() ? "Required" : "";
+      }
+      function paint(showErr) {
+        var err = showErr ? computeErr() : "";
+        if (err) wrap.classList.add("err"); else wrap.classList.remove("err");
+        if (statusNode && statusNode.parentNode) statusNode.parentNode.removeChild(statusNode);
+        if (ferrNode && ferrNode.parentNode) ferrNode.parentNode.removeChild(ferrNode);
+        statusNode = null; ferrNode = null;
+        var ok = required && f[key] && String(f[key]).trim() && !err && (key !== "email" || EMAIL_RE.test(f.email));
+        if (ok) { statusNode = h("span", { class: "w2co-tick" }, "✓"); inwrap.appendChild(statusNode); }
+        else if (err) { statusNode = h("span", { class: "w2co-bang" }, "!"); inwrap.appendChild(statusNode); }
+        if (err) { ferrNode = h("div", { class: "w2co-ferr" }, err); wrap.appendChild(ferrNode); }
+      }
+      input.addEventListener("input", function () { f[key] = input.value; if (wrap.classList.contains("err")) paint(true); });
+      input.addEventListener("focus", function () { inwrap.classList.add("f"); });
+      input.addEventListener("blur", function () { inwrap.classList.remove("f"); touched[key] = true; paint(true); });
+      paint(required && (touched[key] || submitted));
       return wrap;
     }
     function selCountry(opt) {
@@ -295,7 +312,7 @@
         if (c.code === f.country) o.selected = true;
         sel.appendChild(o);
       });
-      sel.addEventListener("change", function () { f.country = sel.value; render(); });
+      sel.addEventListener("change", function () { f.country = sel.value; if (opt.onChange) opt.onChange(); });
       sel.addEventListener("focus", function () { inwrap.classList.add("f"); });
       sel.addEventListener("blur", function () { inwrap.classList.remove("f"); });
       inwrap.appendChild(sel);
@@ -320,7 +337,8 @@
         field("lname", "Last name", "Volkov", true, { half: true })
       ]));
       sheet.appendChild(field("email", "Email", "you@email.com", true, { type: "email" }));
-      sheet.appendChild(field("phone", "Phone", "000 000 000", false, { adorn: "<span style='font-size:16px'>" + ctry.flag + "</span> " + ctry.dial }));
+      var phoneFld = field("phone", "Phone", "000 000 000", false, { type: "tel", adorn: "<span style='font-size:16px'>" + ctry.flag + "</span> " + ctry.dial });
+      sheet.appendChild(phoneFld);
       sheet.appendChild(field("addr", "Street address", "Street, building", true));
       sheet.appendChild(h("div", { class: "w2co-row" }, [
         field("city", "City", "Nha Trang", true, { half: true }),
@@ -328,9 +346,17 @@
       ]));
       sheet.appendChild(field("state", "State / Region", "Khanh Hoa", true));
       sheet.appendChild(h("div", { class: "w2co-row" }, [
-        selCountry({ half: true }),
+        selCountry({ half: true, onChange: function () { var cc = countryOf(f.country); var ad = phoneFld.querySelector(".w2co-adorn"); if (ad) ad.innerHTML = "<span style='font-size:16px'>" + cc.flag + "</span> " + cc.dial; } }),
         field("promo", "Code", "Promo / code", false, { half: true })
       ]));
+      (function () { /* W2CO_FAST_INPUT_V1 enter-nav: Enter -> next field, no re-render */
+        var fl = sheet.querySelectorAll(".w2co-fld input, .w2co-fld select");
+        for (var i = 0; i < fl.length; i++) { (function (el, i) {
+          el.setAttribute("enterkeyhint", i < fl.length - 1 ? "next" : "go");
+          if (el.tagName === "SELECT") return;
+          el.addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); var nx = fl[i + 1]; if (nx) { nx.focus(); } else { el.blur(); } } });
+        })(fl[i], i); }
+      })();
       if (submitted && !deliveryValid()) sheet.appendChild(h("div", { class: "w2co-formwarn" }, "Please fill the highlighted fields."));
       sheet.appendChild(h("button", { class: "w2co-cta", onclick: function () {
         if (deliveryValid()) { stage = "confirm"; render(); } else { submitted = true; render(); }
