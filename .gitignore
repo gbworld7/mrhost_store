@@ -16,3 +16,12 @@ dist.GOOD_*/
 *.tgz
 __pycache__/
 *.pyc
+node_modules
+.next
+.env.local
+media
+dist.before_*
+*.orig
+*.rej
+__pycache__
+_cement
